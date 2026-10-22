@@ -4,6 +4,8 @@ import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as Schema from "effect/Schema";
 
+import { WORKSTATION_USER_DATA_DIRECTORY } from "../workstation/WorkstationBuild.ts";
+
 export class DesktopUserDataInitializationError extends Schema.TaggedError<DesktopUserDataInitializationError>()(
   "DesktopUserDataInitializationError",
   {
@@ -35,13 +37,17 @@ export const resolveUserDataPath = Effect.fn("desktop.userData.resolveUserDataPa
   function* (input: {
     readonly appDataDirectory: string;
     readonly isDevelopment: boolean;
+    readonly isWorkstation?: boolean;
     readonly platform: NodeJS.Platform;
   }) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const names = input.isDevelopment
       ? { current: "t3code-dev", legacy: "T3 Code (Dev)" }
-      : { current: "t3code-v2", legacy: "T3 Code (Alpha)" };
+      : {
+          current: input.isWorkstation ? WORKSTATION_USER_DATA_DIRECTORY : "t3code-v2",
+          legacy: "T3 Code (Alpha)",
+        };
     const destinationPath = path.join(input.appDataDirectory, names.current);
     const legacyPath = path.join(input.appDataDirectory, names.legacy);
     const inspect = (resourcePath: string) =>

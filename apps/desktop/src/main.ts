@@ -76,6 +76,7 @@ import * as DesktopWindow from "./window/DesktopWindow.ts";
 import * as DesktopWslBackend from "./wsl/DesktopWslBackend.ts";
 import * as DesktopWslEnvironment from "./wsl/DesktopWslEnvironment.ts";
 import * as DesktopWslServerTree from "./wsl/DesktopWslServerTree.ts";
+import { readIsWorkstationBuild } from "./workstation/WorkstationBuild.ts";
 
 if (process.argv.includes("--version")) {
   try {
@@ -93,12 +94,14 @@ const layerDesktopEnvironment = Layer.unwrap(
     );
     const platform = yield* HostProcess.Platform;
     const processArch = yield* HostProcess.Architecture;
+    const isWorkstation = yield* readIsWorkstationBuild(metadata);
     return DesktopEnvironment.layer({
       dirname: __dirname,
       homeDirectory: NodeOS.homedir(),
       platform,
       processArch,
       ...metadata,
+      isWorkstation,
     });
   }),
 );

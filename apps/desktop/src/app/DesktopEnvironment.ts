@@ -16,6 +16,7 @@ import * as DesktopConfig from "./DesktopConfig.ts";
 import { resolveLinuxDesktopEntryName } from "./DesktopEarlyElectronStartup.ts";
 import { resolveDesktopBaseDir, resolveDesktopStateDir } from "./DesktopStatePaths.ts";
 import { isNightlyDesktopVersion } from "../updates/updateChannels.ts";
+import { toWorkstationBranding } from "../workstation/WorkstationBuild.ts";
 import type { OtlpProtocol } from "@t3tools/shared/observability";
 
 export interface MakeDesktopEnvironmentInput {
@@ -28,6 +29,7 @@ export interface MakeDesktopEnvironmentInput {
   readonly isPackaged: boolean;
   readonly resourcesPath: string;
   readonly runningUnderArm64Translation: boolean;
+  readonly isWorkstation?: boolean;
 }
 
 export class DesktopEnvironment extends Context.Service<
@@ -39,6 +41,7 @@ export class DesktopEnvironment extends Context.Service<
     readonly processArch: string;
     readonly isPackaged: boolean;
     readonly isDevelopment: boolean;
+    readonly isWorkstation?: boolean;
     readonly appVersion: string;
     readonly appPath: string;
     readonly resourcesPath: string;
@@ -167,10 +170,11 @@ const make = Effect.fn("desktop.environment.make")(function* (
     input.isPackaged && input.platform === "win32"
       ? path.join(input.resourcesPath, "server.asar")
       : appRoot;
-  const branding = resolveDesktopAppBranding({
+  const upstreamBranding = resolveDesktopAppBranding({
     isDevelopment,
     appVersion: input.appVersion,
   });
+  const branding = input.isWorkstation ? toWorkstationBranding(upstreamBranding) : upstreamBranding;
   const displayName = branding.displayName;
   const stateDir = resolveDesktopStateDir({
     baseDir,
@@ -191,6 +195,7 @@ const make = Effect.fn("desktop.environment.make")(function* (
     processArch: input.processArch,
     isPackaged: input.isPackaged,
     isDevelopment,
+    isWorkstation: input.isWorkstation === true,
     appVersion: input.appVersion,
     appPath: input.appPath,
     resourcesPath,

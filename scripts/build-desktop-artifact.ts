@@ -37,6 +37,10 @@ import {
 } from "./lib/brand-assets.ts";
 import { getDefaultBuildArch } from "./lib/build-target-arch.ts";
 import {
+  applyWorkstationBuildIdentity,
+  WORKSTATION_MAC_ICON_PNG,
+} from "./workstation/buildIdentity.ts";
+import {
   findInlinedExternalPackages,
   selectCliRuntimeExternalDependencies,
 } from "./lib/cli-external-packages.ts";
@@ -3682,7 +3686,10 @@ const buildDesktopArtifactUnlocked = Effect.fn("buildDesktopArtifactUnlocked")(f
   });
 
   const appVersion = options.version ?? serverPackageJson.version;
-  const iconAssets = resolveDesktopBuildIconAssets(appVersion);
+  const iconAssets = {
+    ...resolveDesktopBuildIconAssets(appVersion),
+    macIconPng: WORKSTATION_MAC_ICON_PNG,
+  };
   const commitHash = yield* resolveGitCommitHash(repoRoot);
   const mkdir = options.keepStage ? fs.makeTempDirectory : fs.makeTempDirectoryScoped;
   const stageRoot = yield* mkdir({
@@ -3902,7 +3909,7 @@ const buildDesktopArtifactUnlocked = Effect.fn("buildDesktopArtifactUnlocked")(f
     options.platform === "win"
       ? path.join(stageAppDir, WINDOWS_SERVER_RESOURCE_SOURCE_DIR, WINDOWS_SERVER_ASAR_RESOURCE)
       : undefined;
-  const stagePackageJson: StagePackageJson = {
+  const stagePackageJson: StagePackageJson = applyWorkstationBuildIdentity({
     name: "t3code",
     version: appVersion,
     buildVersion: appVersion,
@@ -3937,7 +3944,7 @@ const buildDesktopArtifactUnlocked = Effect.fn("buildDesktopArtifactUnlocked")(f
     devDependencies: {
       electron: electronVersion,
     },
-  };
+  });
 
   const stagePackageJsonString = yield* encodeJsonString(stagePackageJson);
   yield* fs.writeFileString(path.join(stageAppDir, "package.json"), `${stagePackageJsonString}\n`);
