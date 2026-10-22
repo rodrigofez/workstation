@@ -63,6 +63,18 @@ export const useSpacesStore = create<SpacesStore>((set) => ({
     ),
 }));
 
+let coordinatorMounted = false;
+
+export function setSpacesCoordinatorMounted(mounted: boolean): void {
+  coordinatorMounted = mounted;
+}
+
+// With spaces on, "/" is the active space's landing (SpaceIndexGate), so
+// upstream's jump to the server's bootstrap thread must not override it.
+export function spacesOwnIndexRoute(): boolean {
+  return coordinatorMounted;
+}
+
 let persistedState = useSpacesStore.getState().state;
 useSpacesStore.subscribe((store) => {
   if (store.state === persistedState) return;

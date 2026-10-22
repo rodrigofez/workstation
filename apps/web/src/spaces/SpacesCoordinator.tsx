@@ -27,7 +27,7 @@ import {
   type SpaceRouteTarget,
   type SpacesCatalog,
 } from "./spacesModel";
-import { useSpacesStore } from "./spacesStore";
+import { setSpacesCoordinatorMounted, useSpacesStore } from "./spacesStore";
 import {
   resolveSpaceShortcutCommand,
   spaceShortcutFromCommand,
@@ -258,7 +258,13 @@ export function SpacesCoordinator() {
   const catalog = useSpacesCatalog();
   const setCatalog = useSpacesStore((store) => store.setCatalog);
   useEffect(() => setCatalog(catalog), [catalog, setCatalog]);
-  useEffect(() => () => setCatalog(null), [setCatalog]);
+  useEffect(() => {
+    setSpacesCoordinatorMounted(true);
+    return () => {
+      setSpacesCoordinatorMounted(false);
+      setCatalog(null);
+    };
+  }, [setCatalog]);
   const switchSpace = useSwitchSpace();
   useSpaceRouteTracking(switchSpace);
   useSpacePickerTracking();
