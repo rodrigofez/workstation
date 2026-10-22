@@ -1,23 +1,30 @@
-import { SPACE_COLOR_CLASSES } from "./SpaceIcon";
+import { useEffect, useRef } from "react";
+
+import { mountTintLayers, setRestingTint } from "./spaceTintLayers";
 import { useSpacesStore } from "./spacesStore";
 
-const SIDEBAR_SELECTOR =
-  '[data-app-sidebar] [data-sidebar="sidebar"], [data-app-sidebar][data-sidebar="sidebar"]';
+// The layers sit under the sidebar's content (z-index -1 inside an isolated
+// sidebar), so accents, buttons and focus rings keep the theme's colors.
+const SIDEBAR_RULE = `[data-app-sidebar] [data-sidebar="sidebar"], [data-app-sidebar][data-sidebar="sidebar"] {
+  position: relative;
+  isolation: isolate;
+}`;
 
-// Layered over the sidebar's own background and grain, under its content,
-// so accents, buttons and focus rings keep the theme's colors.
 export function SpaceTint() {
   const color = useSpacesStore(
     (store) =>
       store.view?.switcher.find((entry) => entry.id === store.view?.activeSpaceId)?.color ?? null,
   );
-  if (color === null) return null;
-  const tint = `oklch(${SPACE_COLOR_CLASSES[color].tint} / 0.06)`;
+  const markerRef = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const sidebar = markerRef.current?.closest<HTMLElement>('[data-sidebar="sidebar"]');
+    return sidebar ? mountTintLayers(sidebar) : undefined;
+  }, []);
+  useEffect(() => setRestingTint(color), [color]);
   return (
-    <style>{`${SIDEBAR_SELECTOR} {
-  background-image: linear-gradient(${tint}, ${tint}), var(--surface-grain);
-  background-size: auto, var(--surface-grain-size);
-  background-repeat: no-repeat, repeat;
-}`}</style>
+    <>
+      <style>{SIDEBAR_RULE}</style>
+      <span hidden ref={markerRef} />
+    </>
   );
 }

@@ -8,7 +8,8 @@ import { Button } from "../components/ui/button";
 import { Popover, PopoverPopup, PopoverTrigger } from "../components/ui/popover";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../components/ui/tooltip";
 import { SpaceEditorForm } from "./SpaceEditorForm";
-import { SPACE_COLOR_CLASSES, SpaceIcon } from "./SpaceIcon";
+import { SpaceIcon, spaceSoftCss } from "./SpaceIcon";
+import { useSpacePageId } from "./spacePage";
 import { SpaceTint } from "./SpaceTint";
 import { UNASSIGNED_SPACE_ID, type SpaceSwitcherEntry } from "./spacesModel";
 import { useSpacesStore } from "./spacesStore";
@@ -42,12 +43,13 @@ function SpaceButton({
             aria-pressed={active}
             onClick={() => onSelect(entry.id)}
             onContextMenu={(event) => onContextMenu(entry, event)}
+            style={
+              active && entry.color ? { backgroundColor: spaceSoftCss(entry.color) } : undefined
+            }
             className={cn(
-              "relative flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+              "relative flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md outline-hidden transition-[background-color,opacity,scale] duration-200 ease-out focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset active:scale-90",
               active
-                ? entry.color
-                  ? SPACE_COLOR_CLASSES[entry.color].soft
-                  : "bg-sidebar-row-active"
+                ? entry.color === null && "bg-sidebar-row-active"
                 : "opacity-60 hover:bg-sidebar-row-hover hover:opacity-100",
             )}
           >
@@ -116,7 +118,7 @@ export function SpaceSwitcher() {
           entry={entry}
           active={entry.id === view.activeSpaceId}
           needsAttention={entry.id !== view.activeSpaceId && attention.has(entry.id)}
-          onSelect={switchSpace}
+          onSelect={(spaceId) => switchSpace(spaceId, { animate: true })}
           onContextMenu={openMenu}
         />
       ))}
@@ -132,7 +134,7 @@ export function SpaceSwitcher() {
             onCancel={() => setCreating(false)}
             onSubmit={(draft) => {
               setCreating(false);
-              switchSpace(createSpaceFromDraft(draft));
+              switchSpace(createSpaceFromDraft(draft), { animate: true });
             }}
           />
         </PopoverPopup>
@@ -142,13 +144,14 @@ export function SpaceSwitcher() {
 }
 
 export function SpaceLabel() {
+  const pageId = useSpacePageId();
   const activeEntry = useSpacesStore((store) =>
-    store.view?.switcher.find((entry) => entry.id === store.view?.activeSpaceId),
+    store.view?.switcher.find((entry) => entry.id === (pageId ?? store.view?.activeSpaceId)),
   );
   if (activeEntry === undefined) return null;
   return (
     <div className="flex h-5 items-center gap-1.5 px-2 text-2xs font-medium tracking-wide text-sidebar-muted-foreground uppercase">
-      <SpaceIcon space={activeEntry} className="size-3 text-xs" />
+      <SpaceIcon space={activeEntry} className="size-3.5 text-xs" />
       <span className="truncate">{activeEntry.name}</span>
     </div>
   );

@@ -1,22 +1,51 @@
-import type { ProjectIconColor } from "@t3tools/contracts";
-
 // Spaces are client-local: the server, contracts and other clients never see
 // them. Membership is keyed by physical project (environment + normalized
 // workspace root) so grouping settings can change without losing it.
 
 export const UNASSIGNED_SPACE_ID = "unassigned";
 
-export const SPACE_COLORS = [
-  "blue",
-  "violet",
-  "pink",
-  "red",
-  "orange",
-  "amber",
-  "green",
-  "teal",
-] as const satisfies readonly ProjectIconColor[];
-export type SpaceColor = (typeof SPACE_COLORS)[number];
+// A space's color is a hue (HSL degrees, which is what the hue slider speaks)
+// rendered at a fixed lightness and chroma so every pick stays harmonious, plus
+// how strongly it tints the sidebar (0 = no tint).
+export interface SpaceColor {
+  readonly hue: number;
+  readonly tint: number;
+}
+
+const DEFAULT_SPACE_TINT = 0.5;
+
+export const SPACE_HUE_PRESETS = [
+  { name: "blue", label: "Blue", hue: 217 },
+  { name: "violet", label: "Violet", hue: 258 },
+  { name: "pink", label: "Pink", hue: 330 },
+  { name: "red", label: "Red", hue: 0 },
+  { name: "orange", label: "Orange", hue: 25 },
+  { name: "amber", label: "Amber", hue: 40 },
+  { name: "green", label: "Green", hue: 142 },
+  { name: "teal", label: "Teal", hue: 173 },
+] as const;
+
+export function presetSpaceColor(name: (typeof SPACE_HUE_PRESETS)[number]["name"]): SpaceColor {
+  const preset = SPACE_HUE_PRESETS.find((candidate) => candidate.name === name)!;
+  return { hue: preset.hue, tint: DEFAULT_SPACE_TINT };
+}
+
+// Accepts the current shape and the earlier preset names, so stored spaces
+// keep their color.
+function normalizeSpaceColor(value: unknown): SpaceColor | null {
+  if (typeof value === "string") {
+    const preset = SPACE_HUE_PRESETS.find((candidate) => candidate.name === value);
+    return preset ? { hue: preset.hue, tint: DEFAULT_SPACE_TINT } : null;
+  }
+  if (!isRecord(value) || typeof value.hue !== "number" || !Number.isFinite(value.hue)) {
+    return null;
+  }
+  const tint =
+    typeof value.tint === "number" && Number.isFinite(value.tint)
+      ? Math.min(1, Math.max(0, value.tint))
+      : DEFAULT_SPACE_TINT;
+  return { hue: ((Math.round(value.hue) % 360) + 360) % 360, tint };
+}
 
 export interface Space {
   readonly id: string;
@@ -116,8 +145,8 @@ export function spacesProjectRefKey(ref: SpacesProjectRef): string {
 export function initialSpacesState(): SpacesState {
   return {
     spaces: [
-      { id: "work", name: "Work", emoji: "💼", color: "blue" },
-      { id: "personal", name: "Personal", emoji: "🏠", color: "green" },
+      { id: "work", name: "Work", emoji: "💼", color: presetSpaceColor("blue") },
+      { id: "personal", name: "Personal", emoji: "🏠", color: presetSpaceColor("green") },
     ],
     membership: {},
     scratchThreadSpaces: {},
@@ -333,10 +362,6 @@ export interface SpaceDraft {
   readonly color: SpaceColor;
 }
 
-function isSpaceColor(value: unknown): value is SpaceColor {
-  return typeof value === "string" && (SPACE_COLORS as readonly string[]).includes(value);
-}
-
 function sanitizeEmoji(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
@@ -345,9 +370,10 @@ function sanitizeEmoji(value: unknown): string | null {
 
 export function createSpace(state: SpacesState, input: SpaceDraft & { readonly id: string }) {
   const name = input.name.trim();
+  const color = normalizeSpaceColor(input.color);
   if (
     name.length === 0 ||
-    !isSpaceColor(input.color) ||
+    color === null ||
     input.id === UNASSIGNED_SPACE_ID ||
     state.spaces.some((space) => space.id === input.id)
   ) {
@@ -355,10 +381,7 @@ export function createSpace(state: SpacesState, input: SpaceDraft & { readonly i
   }
   return {
     ...state,
-    spaces: [
-      ...state.spaces,
-      { id: input.id, name, emoji: sanitizeEmoji(input.emoji), color: input.color },
-    ],
+    spaces: [...state.spaces, { id: input.id, name, emoji: sanitizeEmoji(input.emoji), color }],
   };
 }
 
@@ -372,11 +395,12 @@ export function editSpace(
     spaces: state.spaces.map((space) => {
       if (space.id !== spaceId) return space;
       const name = patch.name?.trim();
+      const color = normalizeSpaceColor(patch.color);
       return {
         ...space,
         ...(name ? { name } : {}),
         ...(patch.emoji !== undefined ? { emoji: sanitizeEmoji(patch.emoji) } : {}),
-        ...(isSpaceColor(patch.color) ? { color: patch.color } : {}),
+        ...(color ? { color } : {}),
       };
     }),
   };
@@ -523,7 +547,7 @@ export function parseSpacesState(raw: unknown): SpacesState {
       id,
       name: name.trim(),
       emoji: sanitizeEmoji(candidate.emoji),
-      color: isSpaceColor(candidate.color) ? candidate.color : SPACE_COLORS[0],
+      color: normalizeSpaceColor(candidate.color) ?? presetSpaceColor("blue"),
     });
   }
   const spaceIds = new Set(spaces.map((space) => space.id));

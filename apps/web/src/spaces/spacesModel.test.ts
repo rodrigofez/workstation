@@ -11,6 +11,7 @@ import {
   moveScratchThread,
   moveSpace,
   parseSpacesState,
+  presetSpaceColor,
   projectCountInSpace,
   recordProjectCreatedInSpace,
   recordScratchThread,
@@ -338,14 +339,14 @@ describe("managing spaces", () => {
       id: "side",
       name: "  Side projects ",
       emoji: "🧪",
-      color: "violet",
+      color: presetSpaceColor("violet"),
     });
     const view = deriveSpacesView(state, catalog([workRepo]));
 
     expect(view.switcher.map((entry) => [entry.name, entry.emoji, entry.color])).toEqual([
-      ["Work", "💼", "blue"],
-      ["Personal", "🏠", "green"],
-      ["Side projects", "🧪", "violet"],
+      ["Work", "💼", presetSpaceColor("blue")],
+      ["Personal", "🏠", presetSpaceColor("green")],
+      ["Side projects", "🧪", presetSpaceColor("violet")],
       ["Unassigned", null, null],
     ]);
   });
@@ -353,31 +354,58 @@ describe("managing spaces", () => {
   it("has no limit on how many spaces exist", () => {
     let state = initialSpacesState();
     for (let index = 0; index < 20; index += 1) {
-      state = createSpace(state, { id: `s${index}`, name: `S${index}`, emoji: null, color: "red" });
+      state = createSpace(state, {
+        id: `s${index}`,
+        name: `S${index}`,
+        emoji: null,
+        color: presetSpaceColor("red"),
+      });
     }
 
     expect(state.spaces).toHaveLength(22);
   });
 
-  it("rejects an empty name and colors outside the curated palette", () => {
+  it("rejects an empty name and colors that are not a hue", () => {
     const state = initialSpacesState();
 
-    expect(createSpace(state, { id: "x", name: "  ", emoji: null, color: "red" })).toBe(state);
+    expect(
+      createSpace(state, { id: "x", name: "  ", emoji: null, color: presetSpaceColor("red") }),
+    ).toBe(state);
     expect(
       editSpace(state, "work", { color: "chartreuse" as never }).spaces.find(
         (space) => space.id === "work",
       )?.color,
-    ).toBe("blue");
+    ).toEqual(presetSpaceColor("blue"));
   });
 
   it("renames, recolors and changes the emoji of a seeded space", () => {
     const state = editSpace(initialSpacesState(), "work", {
       name: "Job",
       emoji: null,
-      color: "orange",
+      color: presetSpaceColor("orange"),
     });
 
-    expect(state.spaces[0]).toEqual({ id: "work", name: "Job", emoji: null, color: "orange" });
+    expect(state.spaces[0]).toEqual({
+      id: "work",
+      name: "Job",
+      emoji: null,
+      color: presetSpaceColor("orange"),
+    });
+  });
+
+  it("keeps any hue with its tint, clamping tint and wrapping hue", () => {
+    const state = editSpace(initialSpacesState(), "work", { color: { hue: 380, tint: 2 } });
+
+    expect(state.spaces[0]?.color).toEqual({ hue: 20, tint: 1 });
+  });
+
+  it("reads spaces saved with a preset color name", () => {
+    const parsed = parseSpacesState({
+      version: 1,
+      spaces: [{ id: "work", name: "Work", emoji: null, color: "teal" }],
+    });
+
+    expect(parsed.spaces[0]?.color).toEqual(presetSpaceColor("teal"));
   });
 
   it("moves a space left and right without wrapping", () => {
@@ -385,7 +413,7 @@ describe("managing spaces", () => {
       id: "side",
       name: "Side",
       emoji: null,
-      color: "pink",
+      color: presetSpaceColor("pink"),
     });
     state = moveSpace(state, "side", -1);
     expect(state.spaces.map((space) => space.id)).toEqual(["work", "side", "personal"]);
@@ -530,7 +558,12 @@ describe("signals", () => {
 describe("persistence", () => {
   it("round-trips everything a restart needs", () => {
     let state = initialSpacesState();
-    state = createSpace(state, { id: "side", name: "Side", emoji: "🧪", color: "violet" });
+    state = createSpace(state, {
+      id: "side",
+      name: "Side",
+      emoji: "🧪",
+      color: presetSpaceColor("violet"),
+    });
     state = assignGroupToSpace(state, workRepo, "work");
     state = recordScratchThread(state, "mac:quick", "side");
     state = recordSpaceVisit(state, "work", {
@@ -555,7 +588,7 @@ describe("persistence", () => {
       version: 1,
       spaces: [
         { id: "work", name: "Work", emoji: "💼", color: "neon" },
-        { id: "", name: "Broken", color: "red" },
+        { id: "", name: "Broken", color: presetSpaceColor("red") },
       ],
       membership: {
         "vps:/srv/work": { spaceId: "work", environmentId: "vps" },
@@ -568,7 +601,7 @@ describe("persistence", () => {
     });
 
     expect(parsed).toEqual({
-      spaces: [{ id: "work", name: "Work", emoji: "💼", color: "blue" }],
+      spaces: [{ id: "work", name: "Work", emoji: "💼", color: presetSpaceColor("blue") }],
       membership: { "vps:/srv/work": { spaceId: "work", environmentId: "vps" } },
       scratchThreadSpaces: {},
       activeSpaceId: UNASSIGNED_SPACE_ID,

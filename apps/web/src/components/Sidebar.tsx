@@ -210,7 +210,7 @@ import {
   SidebarSectionPlaceholder,
 } from "./sidebar/SidebarListMarkers";
 import { SpaceSidebarNotice } from "../spaces/SpaceSidebarNotice";
-import { SpaceLabel, SpaceSwitcher } from "../spaces/SpaceSwitcher";
+import { SpaceLabel } from "../spaces/SpaceSwitcher";
 import {
   applyMoveToSpaceChoice,
   isMoveToSpaceChoice,
@@ -221,7 +221,11 @@ import {
   useSpaceScopedProjectGroups,
   useSpaceScopedThreads,
 } from "../spaces/useSpaceScope";
-import { SpaceSwipe } from "../spaces/SpaceSwipeGesture";
+import {
+  OutsideSpacePage,
+  useIsActiveSpacePage,
+  useSpacePageProjectScopeKey,
+} from "../spaces/spacePage";
 
 function sameSidebarProviderEntries(
   left: ReadonlyMap<string, SidebarProviderEntry>,
@@ -859,7 +863,10 @@ export default function Sidebar() {
   );
   const environmentMachineById = useEnvironmentMachines();
   const projectGroupsRef = useRef(projectGroups);
-  const persistedProjectScopeKey = useUiStateStore((store) => store.sidebarProjectScopeKey);
+  const isActiveSpacePage = useIsActiveSpacePage();
+  const persistedProjectScopeKey = useSpacePageProjectScopeKey(
+    useUiStateStore((store) => store.sidebarProjectScopeKey),
+  );
   const setPersistedProjectScopeKey = useUiStateStore((store) => store.setSidebarProjectScopeKey);
   const [projectScopeMenuState, dispatchProjectScopeMenu] = useReducer(
     reduceSidebarProjectScopeMenuState,
@@ -960,6 +967,7 @@ export default function Sidebar() {
           ),
         );
   useEffect(() => {
+    if (!isActiveSpacePage) return;
     const nextKey = resolveSidebarProjectScopeKey({
       groups: projectGroups,
       key: persistedProjectScopeKey,
@@ -974,6 +982,7 @@ export default function Sidebar() {
     allProjectConfigsReady,
     allProjectSnapshotsReady,
     clearSelection,
+    isActiveSpacePage,
     persistedProjectScopeKey,
     projectGroups,
     projectGroupingSettings,
@@ -1331,7 +1340,10 @@ export default function Sidebar() {
       }
     })();
   };
-  useEffect(() => registerSettleAndAdvance(attemptSettle), [attemptSettle]);
+  useEffect(
+    () => (isActiveSpacePage ? registerSettleAndAdvance(attemptSettle) : undefined),
+    [attemptSettle, isActiveSpacePage],
+  );
   const settleThreads = (threadKeys: readonly string[]) => {
     const coSettlingKeys = new Set(threadKeys);
     for (const threadKey of threadKeys) {
@@ -2515,6 +2527,7 @@ export default function Sidebar() {
       : false,
   );
   useEffect(() => {
+    if (!isActiveSpacePage) return;
     const onWindowKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.repeat || isCommandPaletteOpen() || isModelPickerOpen()) {
         return;
@@ -2556,6 +2569,7 @@ export default function Sidebar() {
     window.addEventListener("keydown", onWindowKeyDown);
     return () => window.removeEventListener("keydown", onWindowKeyDown);
   }, [
+    isActiveSpacePage,
     keybindings,
     navigateToThread,
     orderedThreadKeys,
@@ -2604,7 +2618,9 @@ export default function Sidebar() {
   return (
     <>
       <ThreadContextDragGhost />
-      <SidebarChromeHeader isElectron={isElectron} />
+      <OutsideSpacePage>
+        <SidebarChromeHeader isElectron={isElectron} />
+      </OutsideSpacePage>
       <SidebarContent
         className="min-h-full"
         fixedHeader={
@@ -2759,7 +2775,6 @@ export default function Sidebar() {
         }
       >
         <SidebarGroup className="flex-1" role="presentation">
-          <SpaceSwipe />
           {isSearchingThreads ? null : <SpaceSidebarNotice />}
           {isSearchingThreads ? (
             threadSearchResults.length > 0 ? (
@@ -3156,8 +3171,9 @@ export default function Sidebar() {
           ) : null}
         </SidebarGroup>
       </SidebarContent>
-      <SpaceSwitcher />
-      <SidebarChromeFooter />
+      <OutsideSpacePage>
+        <SidebarChromeFooter />
+      </OutsideSpacePage>
     </>
   );
 }
