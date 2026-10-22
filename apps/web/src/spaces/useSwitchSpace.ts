@@ -75,7 +75,8 @@ export function useNavigateToSpaceTarget() {
         replace,
       });
     }
-    // The index route opens the space's landing state.
+    // Landing goes through "/" so a space's new draft or empty state is
+    // decided in one place, SpaceIndexGate.
     return router.navigate({ to: "/", replace });
   };
 }

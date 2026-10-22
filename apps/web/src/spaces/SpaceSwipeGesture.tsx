@@ -1,11 +1,9 @@
-import { scopedThreadKey, scopeThreadRef } from "@t3tools/client-runtime/environment";
 import { useRef, useState } from "react";
 
 import { useMediaQuery } from "../hooks/useMediaQuery";
 import { useStableCallback } from "../hooks/useStableCallback";
 import { useQuietThreadShells } from "../state/entities";
 import { SpaceIcon } from "./SpaceIcon";
-import { spaceOfThread } from "./spacesModel";
 import { useSpacesStore } from "./spacesStore";
 import {
   IDLE_SWIPE,
@@ -15,6 +13,7 @@ import {
   type SwipeContext,
   type SwipeState,
 } from "./spaceSwipe";
+import { spaceOfThreadShell } from "./useSpaceScope";
 import { useSwitchSpace } from "./useSwitchSpace";
 
 // Wheel events carry no end; a short quiet gap (which also outlasts macOS
@@ -35,10 +34,7 @@ function SpaceSwipePreview({ spaceId, side }: { spaceId: string; side: PreviewSi
     .filter(
       (thread) =>
         thread.archivedAt === null &&
-        spaceOfThread(view, state, {
-          threadKey: scopedThreadKey(scopeThreadRef(thread.environmentId, thread.id)),
-          projectRef: { environmentId: thread.environmentId, projectId: thread.projectId },
-        }) === spaceId,
+        spaceOfThreadShell({ view, state, spaceId: view.activeSpaceId }, thread) === spaceId,
     )
     .toSorted((left, right) => right.updatedAt.localeCompare(left.updatedAt))
     .slice(0, PREVIEW_THREAD_LIMIT);

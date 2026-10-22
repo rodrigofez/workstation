@@ -233,6 +233,7 @@ import { PullRequestGlyph } from "~/components/pullRequest/pullRequestIcons";
 import { readPullRequestListPreferences } from "~/components/pullRequest/pullRequestListPreferences";
 import { useThreadRouteTarget } from "../hooks/useThreadRouteTarget";
 import { usePaletteScopedProjectGroups, usePaletteSpacesToggle } from "../spaces/paletteSpaces";
+import { markAddProjectStarted } from "../spaces/addProjectOrigin";
 
 const EMPTY_BROWSE_ENTRIES: FilesystemBrowseResult["entries"] = [];
 
@@ -1163,6 +1164,7 @@ function OpenCommandPaletteDialog(props: {
   ];
 
   const openAddProjectFlow = () => {
+    markAddProjectStarted();
     if (addProjectEnvironmentOptions.length === 0) {
       setOpen(false);
       void navigate({ to: "/settings/connections" });

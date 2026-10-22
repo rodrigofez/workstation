@@ -33,8 +33,9 @@ export function moveSpaceBy(spaceId: string, offset: -1 | 1): void {
   useSpacesStore.getState().update((state) => moveSpace(state, spaceId, offset));
 }
 
-// Moving a group moves every physical member, including copies on other
-// environments, so it is sorted once.
+// Membership is per physical project, so a group's copies on other
+// environments are assigned together; otherwise a later regroup could split
+// them across spaces.
 export function assignProjectGroupToSpace(groupKey: string, spaceId: string): void {
   const group = useSpacesStore.getState().catalog?.groups.find((entry) => entry.key === groupKey);
   if (group === undefined) return;

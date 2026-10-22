@@ -12,6 +12,7 @@ import { useThreadRouteTarget } from "../hooks/useThreadRouteTarget";
 import { useProjects, useQuietThreadShells } from "../state/entities";
 import { allReachableShellsLiveAtom } from "../state/shell";
 import { useUiStateStore } from "../uiStateStore";
+import { markAddProjectStarted, takeAddProjectOrigin } from "./addProjectOrigin";
 import { SpaceSwitchHud } from "./SpaceSwitchHud";
 import {
   isKnownProjectRef,
@@ -23,7 +24,6 @@ import {
   spaceOfThread,
   spacePicker,
   spacesProjectRefKey,
-  UNASSIGNED_SPACE_ID,
   type SpaceRouteTarget,
   type SpacesCatalog,
 } from "./spacesModel";
@@ -34,10 +34,6 @@ import {
   useSpaceShortcutStore,
 } from "./spaceShortcuts";
 import { spaceTargetLookup, useSwitchSpace } from "./useSwitchSpace";
-
-// An add-project flow that never produces a project must not claim one that
-// shows up much later from another client.
-const ADD_PROJECT_ORIGIN_TTL_MS = 10 * 60_000;
 
 function parseTimestamp(value: string | null | undefined): number {
   const parsed = value ? Date.parse(value) : Number.NaN;
@@ -193,17 +189,11 @@ function useScratchDraftRecording() {
 function useAddProjectCapture() {
   const projects = useProjects();
   const ready = useSpacesStore((store) => store.catalog?.ready === true);
-  const originRef = useRef<{ spaceId: string; startedAt: number } | null>(null);
   const seenRef = useRef<ReadonlySet<string> | null>(null);
   useEffect(
     () =>
       onOpenCommandPalette((detail) => {
-        if (detail.open !== "add-project") return;
-        const spaceId = useSpacesStore.getState().view?.activeSpaceId;
-        originRef.current =
-          spaceId === undefined || spaceId === UNASSIGNED_SPACE_ID
-            ? null
-            : { spaceId, startedAt: Date.now() };
+        if (detail.open === "add-project") markAddProjectStarted();
       }),
     [],
   );
@@ -217,21 +207,19 @@ function useAddProjectCapture() {
     const seen = seenRef.current;
     seenRef.current = new Set(physicalKeys.keys());
     if (seen === null) return;
-    const origin = originRef.current;
-    if (origin === null) return;
-    if (Date.now() - origin.startedAt > ADD_PROJECT_ORIGIN_TTL_MS) {
-      originRef.current = null;
-      return;
-    }
-    for (const [physicalKey, environmentId] of physicalKeys) {
-      if (seen.has(physicalKey)) continue;
-      originRef.current = null;
-      useSpacesStore
-        .getState()
-        .update((state) =>
-          recordProjectCreatedInSpace(state, { physicalKey, environmentId }, origin.spaceId),
-        );
-    }
+    const created = [...physicalKeys].filter(([physicalKey]) => !seen.has(physicalKey));
+    if (created.length === 0) return;
+    const spaceId = takeAddProjectOrigin(isCommandPaletteOpen());
+    if (spaceId === null) return;
+    useSpacesStore
+      .getState()
+      .update((state) =>
+        created.reduce(
+          (current, [physicalKey, environmentId]) =>
+            recordProjectCreatedInSpace(current, { physicalKey, environmentId }, spaceId),
+          state,
+        ),
+      );
   }, [projects, ready]);
 }
 

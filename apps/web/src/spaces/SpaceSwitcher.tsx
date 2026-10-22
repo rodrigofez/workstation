@@ -4,6 +4,7 @@ import { useState, type MouseEvent as ReactMouseEvent } from "react";
 
 import { cn } from "~/lib/utils";
 import { readLocalApi } from "../localApi";
+import { Button } from "../components/ui/button";
 import { Popover, PopoverPopup, PopoverTrigger } from "../components/ui/popover";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../components/ui/tooltip";
 import { SpaceEditorForm } from "./SpaceEditorForm";
@@ -77,7 +78,8 @@ export function SpaceSwitcher() {
     event.preventDefault();
     if (entry.id === UNASSIGNED_SPACE_ID) return;
     const index = view.switcher.findIndex((candidate) => candidate.id === entry.id);
-    const lastSpaceIndex = view.switcher.filter((candidate) => candidate.color !== null).length - 1;
+    const lastSpaceIndex =
+      view.switcher.filter((candidate) => candidate.id !== UNASSIGNED_SPACE_ID).length - 1;
     void readLocalApi()
       ?.contextMenu.show<SpaceMenuAction>(
         [
@@ -120,15 +122,9 @@ export function SpaceSwitcher() {
       ))}
       <Popover open={creating} onOpenChange={setCreating}>
         <PopoverTrigger
-          render={
-            <button
-              type="button"
-              aria-label="New space"
-              className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-sidebar-muted-foreground outline-hidden hover:bg-sidebar-row-hover hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
-            />
-          }
+          render={<Button size="icon-sm" variant="ghost-muted" aria-label="New space" />}
         >
-          <PlusIcon className="size-4" />
+          <PlusIcon />
         </PopoverTrigger>
         <PopoverPopup side="top" align="start">
           <SpaceEditorForm
