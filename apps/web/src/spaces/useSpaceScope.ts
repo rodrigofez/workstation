@@ -20,7 +20,7 @@ export interface SpaceScope {
   readonly spaceId: string;
 }
 
-export function useSpaceScope(): SpaceScope | null {
+function useSpaceScope(): SpaceScope | null {
   const view = useSpacesStore((store) => store.view);
   const state = useSpacesStore((store) => store.state);
   return view === null ? null : { view, state, spaceId: view.activeSpaceId };
@@ -31,7 +31,7 @@ export function readSpaceScope(): SpaceScope | null {
   return view === null ? null : { view, state, spaceId: view.activeSpaceId };
 }
 
-export function spaceOfProjectRef(scope: SpaceScope, ref: SpacesProjectRef): string | null {
+function spaceOfProjectRef(scope: SpaceScope, ref: SpacesProjectRef): string | null {
   const refKey = spacesProjectRefKey(ref);
   if (scope.view.scratchProjectRefKeys.has(refKey)) return null;
   return scope.view.spaceByProjectRefKey.get(refKey) ?? UNASSIGNED_SPACE_ID;
@@ -39,7 +39,7 @@ export function spaceOfProjectRef(scope: SpaceScope, ref: SpacesProjectRef): str
 
 // Scratch projects are shared by every space; their threads are scoped one by
 // one instead.
-export function isProjectInSpace(scope: SpaceScope, ref: SpacesProjectRef): boolean {
+function isProjectInSpace(scope: SpaceScope, ref: SpacesProjectRef): boolean {
   const spaceId = spaceOfProjectRef(scope, ref);
   return spaceId === null || spaceId === scope.spaceId;
 }

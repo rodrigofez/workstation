@@ -22,7 +22,7 @@ export type SpaceShortcutCommand = (typeof SPACE_SHORTCUT_COMMANDS)[number];
 
 const STORAGE_KEY = "workstation:space-shortcuts";
 
-export function defaultSpaceShortcut(
+function defaultSpaceShortcut(
   command: SpaceShortcutCommand,
   platform = navigator.platform,
 ): string | null {

@@ -3,7 +3,7 @@ import type { ContextMenuItem, EnvironmentId, ThreadId } from "@t3tools/contract
 
 import { spacesProjectRefKey, UNASSIGNED_ENTRY } from "./spacesModel";
 import { useSpacesStore } from "./spacesStore";
-import { assignProjectGroupToSpace, moveScratchThreadsToSpace } from "./useSpaceActions";
+import { assignProjectGroupToSpace, moveScratchThreadsToSpace } from "./spaceActions";
 import { readSpaceScope, spaceOfThreadShell } from "./useSpaceScope";
 
 const MOVE_TO_SPACE_PREFIX = "move-to-space:";
@@ -25,7 +25,7 @@ function isScratchThread(thread: MenuThread): boolean {
 
 // "Move project to space ▸" moves the thread's whole project group; a
 // no-project thread has no group, so only that thread moves.
-export function appendMoveToSpaceMenu<T extends string>(
+function appendMoveToSpaceMenu<T extends string>(
   items: readonly ContextMenuItem<T>[],
   thread: MenuThread,
 ): readonly ContextMenuItem<T | MoveToSpaceMenuId>[] {

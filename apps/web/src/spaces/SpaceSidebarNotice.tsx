@@ -8,11 +8,8 @@ import { useSidebarProjectGroups } from "../hooks/useSidebarProjectGroups";
 import { SpaceIcon } from "./SpaceIcon";
 import { UNASSIGNED_SPACE_ID, type SpaceSwitcherEntry } from "./spacesModel";
 import { useSpacesStore } from "./spacesStore";
-import {
-  assignProjectGroupToSpace,
-  moveScratchThreadsToSpace,
-  useUnavailableSpaceProjects,
-} from "./useSpaceActions";
+import { assignProjectGroupToSpace, moveScratchThreadsToSpace } from "./spaceActions";
+import { useUnavailableSpaceProjects } from "./useSpaceSignals";
 
 function SpaceChips({
   spaces,

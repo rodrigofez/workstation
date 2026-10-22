@@ -39,7 +39,7 @@ import {
   createSpaceFromDraft,
   editSpaceFromDraft,
   moveSpaceBy,
-} from "./useSpaceActions";
+} from "./spaceActions";
 
 function SpaceRow({
   space,

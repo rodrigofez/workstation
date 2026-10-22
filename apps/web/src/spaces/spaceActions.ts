@@ -1,10 +1,4 @@
-import { scopedThreadKey, scopeThreadRef } from "@t3tools/client-runtime/environment";
-
-import { resolveThreadStatusPill } from "../components/Sidebar.logic";
-import { randomUUID } from "../lib/utils";
 import { readLocalApi } from "../localApi";
-import { useQuietThreadShells } from "../state/entities";
-import { useEnvironments } from "../state/environments";
 import {
   assignGroupToSpace,
   createSpace,
@@ -13,14 +7,20 @@ import {
   moveScratchThread,
   moveSpace,
   projectCountInSpace,
-  spacesNeedingAttention,
-  unavailableProjects,
   type SpaceDraft,
 } from "./spacesModel";
 import { useSpacesStore } from "./spacesStore";
 
+// lib/utils' randomUUID would pull the composer store into every importer of
+// these actions; a short random id is all a client-local space needs.
+function newSpaceId(): string {
+  return Array.from(globalThis.crypto.getRandomValues(new Uint8Array(8)), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
+}
+
 export function createSpaceFromDraft(draft: SpaceDraft): string {
-  const id = randomUUID();
+  const id = newSpaceId();
   useSpacesStore.getState().update((state) => createSpace(state, { id, ...draft }));
   return id;
 }
@@ -68,42 +68,4 @@ export async function confirmAndDeleteSpace(spaceId: string): Promise<boolean> {
     )) ?? false;
   if (confirmed) useSpacesStore.getState().update((current) => deleteSpace(current, spaceId));
   return confirmed;
-}
-
-export function useSpacesNeedingAttention(): ReadonlySet<string> {
-  const view = useSpacesStore((store) => store.view);
-  const state = useSpacesStore((store) => store.state);
-  const threads = useQuietThreadShells();
-  if (view === null) return new Set();
-  return spacesNeedingAttention(
-    view,
-    state,
-    threads.flatMap((thread) => {
-      if (thread.archivedAt !== null) return [];
-      const pill = resolveThreadStatusPill({ thread })?.label;
-      return [
-        {
-          threadKey: scopedThreadKey(scopeThreadRef(thread.environmentId, thread.id)),
-          projectRef: { environmentId: thread.environmentId, projectId: thread.projectId },
-          needsAttention:
-            pill === "Pending Approval" || pill === "Awaiting Input" || pill === "Failed",
-        },
-      ];
-    }),
-  );
-}
-
-export function useUnavailableSpaceProjects(spaceId: string | null) {
-  const state = useSpacesStore((store) => store.state);
-  const { environments } = useEnvironments();
-  if (spaceId === null) return [];
-  return unavailableProjects(
-    state,
-    spaceId,
-    environments.map((environment) => ({
-      environmentId: environment.environmentId,
-      label: environment.label,
-      connected: environment.connection.phase === "connected",
-    })),
-  );
 }

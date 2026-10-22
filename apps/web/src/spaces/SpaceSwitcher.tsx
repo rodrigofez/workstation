@@ -11,12 +11,8 @@ import { SPACE_COLOR_CLASSES, SpaceIcon } from "./SpaceIcon";
 import { SpaceTint } from "./SpaceTint";
 import { UNASSIGNED_SPACE_ID, type SpaceSwitcherEntry } from "./spacesModel";
 import { useSpacesStore } from "./spacesStore";
-import {
-  confirmAndDeleteSpace,
-  createSpaceFromDraft,
-  moveSpaceBy,
-  useSpacesNeedingAttention,
-} from "./useSpaceActions";
+import { confirmAndDeleteSpace, createSpaceFromDraft, moveSpaceBy } from "./spaceActions";
+import { useSpacesNeedingAttention } from "./useSpaceSignals";
 import { useSwitchSpace } from "./useSwitchSpace";
 
 type SpaceMenuAction = "edit" | "move-left" | "move-right" | "delete";
