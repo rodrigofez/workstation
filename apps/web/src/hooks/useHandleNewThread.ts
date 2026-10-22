@@ -29,6 +29,7 @@ import {
   useProjects,
   useQuietThreadShell,
 } from "../state/entities";
+import { useSpaceScopedProjects } from "../spaces/useSpaceScope";
 import {
   hasExplicitComposerModelSelection,
   resolveNewDraftStartFromOrigin,
@@ -397,7 +398,7 @@ export function useHandleNewThread() {
         : useComposerDraftStore.getState().getDraftSession(routeTarget.draftId)
       : null,
   );
-  const projects = useProjects();
+  const projects = useSpaceScopedProjects(useProjects());
   const handleNewThread = useNewThreadHandler();
   const [defaultProject] = orderItemsByPreferredIds({
     items: projects,

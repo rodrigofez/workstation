@@ -18,6 +18,7 @@ import { Route as ConnectRouteImport } from './routes/connect'
 import { Route as ChatRouteImport } from './routes/_chat'
 import { Route as ChatIndexRouteImport } from './routes/_chat.index'
 import { Route as SettingsStorageRouteImport } from './routes/settings.storage'
+import { Route as SettingsSpacesRouteImport } from './routes/settings.spaces'
 import { Route as SettingsSourceControlRouteImport } from './routes/settings.source-control'
 import { Route as SettingsSnapShotRouteImport } from './routes/settings.snap-shot'
 import { Route as SettingsScheduledTasksRouteImport } from './routes/settings.scheduled-tasks'
@@ -79,6 +80,11 @@ const ChatIndexRoute = ChatIndexRouteImport.update({
 const SettingsStorageRoute = SettingsStorageRouteImport.update({
   id: '/storage',
   path: '/storage',
+  getParentRoute: () => SettingsRoute,
+} as any)
+const SettingsSpacesRoute = SettingsSpacesRouteImport.update({
+  id: '/spaces',
+  path: '/spaces',
   getParentRoute: () => SettingsRoute,
 } as any)
 const SettingsSourceControlRoute = SettingsSourceControlRouteImport.update({
@@ -198,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/settings/scheduled-tasks': typeof SettingsScheduledTasksRoute
   '/settings/snap-shot': typeof SettingsSnapShotRoute
   '/settings/source-control': typeof SettingsSourceControlRoute
+  '/settings/spaces': typeof SettingsSpacesRoute
   '/settings/storage': typeof SettingsStorageRoute
   '/$environmentId/$threadId': typeof ChatEnvironmentIdThreadIdRoute
   '/draft/$draftId': typeof ChatDraftDraftIdRoute
@@ -225,6 +232,7 @@ export interface FileRoutesByTo {
   '/settings/scheduled-tasks': typeof SettingsScheduledTasksRoute
   '/settings/snap-shot': typeof SettingsSnapShotRoute
   '/settings/source-control': typeof SettingsSourceControlRoute
+  '/settings/spaces': typeof SettingsSpacesRoute
   '/settings/storage': typeof SettingsStorageRoute
   '/': typeof ChatIndexRoute
   '/$environmentId/$threadId': typeof ChatEnvironmentIdThreadIdRoute
@@ -255,6 +263,7 @@ export interface FileRoutesById {
   '/settings/scheduled-tasks': typeof SettingsScheduledTasksRoute
   '/settings/snap-shot': typeof SettingsSnapShotRoute
   '/settings/source-control': typeof SettingsSourceControlRoute
+  '/settings/spaces': typeof SettingsSpacesRoute
   '/settings/storage': typeof SettingsStorageRoute
   '/_chat/': typeof ChatIndexRoute
   '/_chat/$environmentId/$threadId': typeof ChatEnvironmentIdThreadIdRoute
@@ -286,6 +295,7 @@ export interface FileRouteTypes {
     | '/settings/scheduled-tasks'
     | '/settings/snap-shot'
     | '/settings/source-control'
+    | '/settings/spaces'
     | '/settings/storage'
     | '/$environmentId/$threadId'
     | '/draft/$draftId'
@@ -313,6 +323,7 @@ export interface FileRouteTypes {
     | '/settings/scheduled-tasks'
     | '/settings/snap-shot'
     | '/settings/source-control'
+    | '/settings/spaces'
     | '/settings/storage'
     | '/'
     | '/$environmentId/$threadId'
@@ -342,6 +353,7 @@ export interface FileRouteTypes {
     | '/settings/scheduled-tasks'
     | '/settings/snap-shot'
     | '/settings/source-control'
+    | '/settings/spaces'
     | '/settings/storage'
     | '/_chat/'
     | '/_chat/$environmentId/$threadId'
@@ -422,6 +434,13 @@ declare module '@tanstack/react-router' {
       path: '/storage'
       fullPath: '/settings/storage'
       preLoaderRoute: typeof SettingsStorageRouteImport
+      parentRoute: typeof SettingsRoute
+    }
+    '/settings/spaces': {
+      id: '/settings/spaces'
+      path: '/spaces'
+      fullPath: '/settings/spaces'
+      preLoaderRoute: typeof SettingsSpacesRouteImport
       parentRoute: typeof SettingsRoute
     }
     '/settings/source-control': {
@@ -585,6 +604,7 @@ interface SettingsRouteChildren {
   SettingsScheduledTasksRoute: typeof SettingsScheduledTasksRoute
   SettingsSnapShotRoute: typeof SettingsSnapShotRoute
   SettingsSourceControlRoute: typeof SettingsSourceControlRoute
+  SettingsSpacesRoute: typeof SettingsSpacesRoute
   SettingsStorageRoute: typeof SettingsStorageRoute
 }
 
@@ -602,6 +622,7 @@ const SettingsRouteChildren: SettingsRouteChildren = {
   SettingsScheduledTasksRoute: SettingsScheduledTasksRoute,
   SettingsSnapShotRoute: SettingsSnapShotRoute,
   SettingsSourceControlRoute: SettingsSourceControlRoute,
+  SettingsSpacesRoute: SettingsSpacesRoute,
   SettingsStorageRoute: SettingsStorageRoute,
 }
 

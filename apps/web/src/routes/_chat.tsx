@@ -9,6 +9,7 @@ import { ThreadLinkPrompt } from "../components/promptLinks/ThreadLinkPrompt";
 import { useClientSettings, useLegacySidebarEnabled } from "../hooks/useSettings";
 import { openCommandPalette } from "../commandPaletteBus";
 import { useProjects } from "../state/entities";
+import { useSpaceScopedProjects } from "../spaces/useSpaceScope";
 import { isPreviewAvailableFor } from "../browser/previewRuntime";
 import { usePrimaryEnvironmentId } from "../state/environments";
 import { useEnvironmentScope } from "../state/session";
@@ -42,7 +43,7 @@ function ChatRouteGlobalShortcuts() {
   const keybindings = useAtomValue(primaryServerKeybindingsAtom);
   const legacySidebarEnabled = useLegacySidebarEnabled();
   const projectGroupingSettings = useClientSettings(selectProjectGroupingSettings);
-  const projects = useProjects();
+  const projects = useSpaceScopedProjects(useProjects());
   const primaryEnvironmentId = usePrimaryEnvironmentId();
   const { scratchEnvironmentId, startScratchThread } = useScratchProject();
   const projectGroupCount = buildSidebarProjectSnapshots({

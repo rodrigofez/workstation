@@ -87,6 +87,7 @@ import {
 import { getDesktopSnapShotBridge } from "../lib/desktopSnapShot";
 import { installDesktopPasteAsText } from "../lib/desktopPasteAsText";
 import { shouldResumeSnapShotSetupOnStartup } from "../lib/snapShotSetupResume";
+import { spacesOwnIndexRoute } from "../spaces/spacesStore";
 
 export const Route = createRootRoute({
   beforeLoad: async ({ location }) => {
@@ -546,7 +547,7 @@ function EventRouter({
         );
       useUiStateStore.getState().setProjectExpanded(bootstrapProjectKey, true);
 
-      if (readPathname() !== "/") {
+      if (readPathname() !== "/" || spacesOwnIndexRoute()) {
         return;
       }
       if (skipInitialBootstrapNavigationRef.current) {

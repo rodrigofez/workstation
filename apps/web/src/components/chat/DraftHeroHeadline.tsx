@@ -24,6 +24,7 @@ import {
   projectGroupsSpanEnvironments,
 } from "~/sidebarProjectGrouping";
 import { useProjects, useThreadShells } from "~/state/entities";
+import { useSpaceScopedProjects } from "~/spaces/useSpaceScope";
 import { useEnvironments, usePrimaryEnvironmentId } from "~/state/environments";
 import { ProjectEnvironmentBadge } from "../ProjectEnvironmentBadge";
 import { ProjectFavicon } from "../ProjectFavicon";
@@ -63,6 +64,7 @@ export function DraftHeroHeadline({
   activeProjectTitle,
 }: DraftHeroHeadlineProps) {
   const projects = useProjects();
+  const spaceProjects = useSpaceScopedProjects(projects);
   const threads = useThreadShells();
   const { environments } = useEnvironments();
   const primaryEnvironmentId = usePrimaryEnvironmentId();
@@ -87,7 +89,7 @@ export function DraftHeroHeadline({
   );
   const projectGroups = sortLogicalProjectsForSidebar(
     buildSidebarProjectSnapshots({
-      projects,
+      projects: spaceProjects,
       settings: projectGroupingSettings,
       primaryEnvironmentId,
       resolveEnvironmentLabel: (environmentId) => environmentLabelById.get(environmentId) ?? null,

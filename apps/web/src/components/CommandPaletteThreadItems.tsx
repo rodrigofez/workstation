@@ -20,6 +20,7 @@ import {
 import { useThreadSearch } from "../state/queries";
 import { primaryServerProvidersAtom } from "../state/server";
 import { buildThreadRouteParams } from "../threadRoutes";
+import { usePaletteScopedThreads } from "../spaces/paletteSpaces";
 import { buildThreadActionItems, ITEM_ICON_CLASS } from "./CommandPalette.logic";
 import { useEnvironmentLookups, useProjectLookups } from "./CommandPaletteLookups";
 import { ThreadCommandSubtitle } from "./ThreadCommandSubtitle";
@@ -74,7 +75,7 @@ export function useCommandPaletteThreadItems(input: {
 }) {
   const { activeThreadId, threadSearchQuery } = input;
   const navigate = useNavigate();
-  const threads = useThreadShells();
+  const threads = usePaletteScopedThreads(useThreadShells());
   const sidebarThreadSortOrder = useClientSettings((settings) => settings.sidebarThreadSortOrder);
   const { projectEnvironmentLocationById } = useEnvironmentLookups();
   const providerEntryByEnvironmentAndInstanceId = useProviderEntryByEnvironmentAndInstanceId();
