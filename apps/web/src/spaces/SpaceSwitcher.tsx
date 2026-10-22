@@ -1,0 +1,161 @@
+import { useNavigate } from "@tanstack/react-router";
+import { PlusIcon } from "lucide-react";
+import { useState, type MouseEvent as ReactMouseEvent } from "react";
+
+import { cn } from "~/lib/utils";
+import { readLocalApi } from "../localApi";
+import { Popover, PopoverPopup, PopoverTrigger } from "../components/ui/popover";
+import { Tooltip, TooltipPopup, TooltipTrigger } from "../components/ui/tooltip";
+import { SpaceEditorForm } from "./SpaceEditorForm";
+import { SPACE_COLOR_CLASSES, SpaceIcon } from "./SpaceIcon";
+import { UNASSIGNED_SPACE_ID, type SpaceSwitcherEntry } from "./spacesModel";
+import { useSpacesStore } from "./spacesStore";
+import {
+  confirmAndDeleteSpace,
+  createSpaceFromDraft,
+  moveSpaceBy,
+  useSpacesNeedingAttention,
+} from "./useSpaceActions";
+import { useSwitchSpace } from "./useSwitchSpace";
+
+type SpaceMenuAction = "edit" | "move-left" | "move-right" | "delete";
+
+function SpaceButton({
+  entry,
+  active,
+  needsAttention,
+  onSelect,
+  onContextMenu,
+}: {
+  entry: SpaceSwitcherEntry;
+  active: boolean;
+  needsAttention: boolean;
+  onSelect: (spaceId: string) => void;
+  onContextMenu: (entry: SpaceSwitcherEntry, event: ReactMouseEvent) => void;
+}) {
+  const label = needsAttention ? `${entry.name} (needs attention)` : entry.name;
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <button
+            type="button"
+            aria-label={label}
+            aria-pressed={active}
+            onClick={() => onSelect(entry.id)}
+            onContextMenu={(event) => onContextMenu(entry, event)}
+            className={cn(
+              "relative flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+              active
+                ? entry.color
+                  ? SPACE_COLOR_CLASSES[entry.color].soft
+                  : "bg-sidebar-row-active"
+                : "opacity-60 hover:bg-sidebar-row-hover hover:opacity-100",
+            )}
+          >
+            <SpaceIcon space={entry} />
+            {needsAttention ? (
+              <span
+                aria-hidden
+                className="absolute top-0.5 right-0.5 size-1.5 rounded-full bg-warning ring-2 ring-sidebar"
+              />
+            ) : null}
+          </button>
+        }
+      />
+      <TooltipPopup side="top">{entry.name}</TooltipPopup>
+    </Tooltip>
+  );
+}
+
+export function SpaceSwitcher() {
+  const view = useSpacesStore((store) => store.view);
+  const switchSpace = useSwitchSpace();
+  const navigate = useNavigate();
+  const attention = useSpacesNeedingAttention();
+  const [creating, setCreating] = useState(false);
+  if (view === null) return null;
+
+  const openMenu = (entry: SpaceSwitcherEntry, event: ReactMouseEvent) => {
+    event.preventDefault();
+    if (entry.id === UNASSIGNED_SPACE_ID) return;
+    const index = view.switcher.findIndex((candidate) => candidate.id === entry.id);
+    const lastSpaceIndex = view.switcher.filter((candidate) => candidate.color !== null).length - 1;
+    void readLocalApi()
+      ?.contextMenu.show<SpaceMenuAction>(
+        [
+          { id: "edit", label: "Edit…" },
+          { id: "move-left", label: "Move left", disabled: index <= 0 },
+          { id: "move-right", label: "Move right", disabled: index >= lastSpaceIndex },
+          { id: "delete", label: "Delete…", destructive: true, separatorBefore: true },
+        ],
+        { x: event.clientX, y: event.clientY },
+      )
+      .then((action) => {
+        if (action === "edit") {
+          void navigate({ to: "/settings/spaces", search: { edit: entry.id } });
+        } else if (action === "move-left") {
+          moveSpaceBy(entry.id, -1);
+        } else if (action === "move-right") {
+          moveSpaceBy(entry.id, 1);
+        } else if (action === "delete") {
+          void confirmAndDeleteSpace(entry.id);
+        }
+      });
+  };
+
+  return (
+    <div
+      role="toolbar"
+      aria-label="Spaces"
+      className="flex shrink-0 items-center gap-0.5 overflow-x-auto px-2 pt-1 [scrollbar-width:none]"
+    >
+      {view.switcher.map((entry) => (
+        <SpaceButton
+          key={entry.id}
+          entry={entry}
+          active={entry.id === view.activeSpaceId}
+          needsAttention={entry.id !== view.activeSpaceId && attention.has(entry.id)}
+          onSelect={switchSpace}
+          onContextMenu={openMenu}
+        />
+      ))}
+      <Popover open={creating} onOpenChange={setCreating}>
+        <PopoverTrigger
+          render={
+            <button
+              type="button"
+              aria-label="New space"
+              className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-sidebar-muted-foreground outline-hidden hover:bg-sidebar-row-hover hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+            />
+          }
+        >
+          <PlusIcon className="size-4" />
+        </PopoverTrigger>
+        <PopoverPopup side="top" align="start">
+          <SpaceEditorForm
+            submitLabel="Create space"
+            onCancel={() => setCreating(false)}
+            onSubmit={(draft) => {
+              setCreating(false);
+              switchSpace(createSpaceFromDraft(draft));
+            }}
+          />
+        </PopoverPopup>
+      </Popover>
+    </div>
+  );
+}
+
+export function SpaceLabel() {
+  const activeEntry = useSpacesStore((store) =>
+    store.view?.switcher.find((entry) => entry.id === store.view?.activeSpaceId),
+  );
+  if (activeEntry === undefined) return null;
+  return (
+    <div className="flex h-5 items-center gap-1.5 px-2 text-2xs font-medium tracking-wide text-sidebar-muted-foreground uppercase">
+      <SpaceIcon space={activeEntry} className="size-3 text-xs" />
+      <span className="truncate">{activeEntry.name}</span>
+    </div>
+  );
+}

@@ -40,6 +40,7 @@ import {
 import LegacyThreadSidebar from "./LegacySidebar";
 import { useThreadVisitedMigration } from "../hooks/useThreadVisitedMigration";
 import ThreadSidebar from "./Sidebar";
+import { SpacesCoordinator } from "../spaces/SpacesCoordinator";
 import { SettingsSidebarNav } from "./settings/SettingsSidebarNav";
 import { SidebarBrandWidthProbe, SidebarChromeHeader } from "./sidebar/SidebarChrome";
 import { MainAppLocationTracker } from "./sidebar/mainAppLocation";
@@ -433,6 +434,7 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
         <NavigationHistoryShortcuts />
         {isOnSettings ? null : <ThreadUndoShortcut />}
         <MainAppLocationTracker />
+        {legacySidebarEnabled ? null : <SpacesCoordinator />}
       </SidebarProvider>
     </PanelAnimationSuppressionProvider>
   );

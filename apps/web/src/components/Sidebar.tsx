@@ -209,6 +209,13 @@ import {
   SidebarSectionHeader,
   SidebarSectionPlaceholder,
 } from "./sidebar/SidebarListMarkers";
+import { SpaceSidebarNotice } from "../spaces/SpaceSidebarNotice";
+import { SpaceLabel, SpaceSwitcher } from "../spaces/SpaceSwitcher";
+import {
+  useSpaceDraftFilter,
+  useSpaceScopedProjectGroups,
+  useSpaceScopedThreads,
+} from "../spaces/useSpaceScope";
 
 function sameSidebarProviderEntries(
   left: ReadonlyMap<string, SidebarProviderEntry>,
@@ -356,7 +363,7 @@ function useSidebarThreads(input: {
 }) {
   const { projectScopeKey, scopedProjectKeys, serverConfigs, optimisticDrop, routeThreadRef } =
     input;
-  const threads = useQuietThreadShells();
+  const threads = useSpaceScopedThreads(useQuietThreadShells());
   const routeRowThreadKey =
     routeThreadRef === null
       ? null
@@ -672,7 +679,7 @@ function useSidebarLookups() {
   const environments = useEnvironmentIdentities();
   const serverConfigs = useServerConfigs();
   const providerEntriesByEnvironment = useAtomValue(sidebarProviderEntriesAtom);
-  const projectGroups = useSidebarProjectGroups();
+  const projectGroups = useSpaceScopedProjectGroups(useSidebarProjectGroups());
   const environmentLabelById = new Map(
     environments.map((environment) => [environment.environmentId, environment.label] as const),
   );
@@ -967,10 +974,11 @@ export default function Sidebar() {
     setPersistedProjectScopeKey,
   ]);
   const routeDraftIdForRows = routeTarget?.kind === "draft" ? routeTarget.draftId : null;
+  const spaceDraftFilter = useSpaceDraftFilter();
   const visibleDraftSessionCount = useComposerDraftStore((store) => {
     let count = 0;
     for (const [draftKey, session] of Object.entries(store.draftThreadsByThreadKey)) {
-      if (session.promotedTo != null) {
+      if (session.promotedTo != null || (spaceDraftFilter && !spaceDraftFilter(session))) {
         continue;
       }
       if (!composerDraftHasUserContent(store.draftsByThreadKey[draftKey])) {
@@ -2591,6 +2599,7 @@ export default function Sidebar() {
         className="min-h-full"
         fixedHeader={
           <SidebarGroup className="z-[1]">
+            <SpaceLabel />
             <SidebarThreadHeader
               searchFieldRef={headerSearchRef}
               hasProjects={projectGroups.length > 0}
@@ -2740,6 +2749,7 @@ export default function Sidebar() {
         }
       >
         <SidebarGroup className="flex-1" role="presentation">
+          {isSearchingThreads ? null : <SpaceSidebarNotice />}
           {isSearchingThreads ? (
             threadSearchResults.length > 0 ? (
               <TooltipProvider
@@ -2956,6 +2966,7 @@ export default function Sidebar() {
                           projectByKey={projectByKey}
                           projectDisplayNameByKey={projectDisplayNameByKey}
                           scopedProjectKeys={scopedProjectKeys}
+                          isSessionVisible={spaceDraftFilter}
                           routeDraftId={routeDraftIdForRows}
                           onNavigateToDraft={navigateToDraft}
                           onDraftContextMenu={handleDraftContextMenu}
@@ -3134,6 +3145,7 @@ export default function Sidebar() {
           ) : null}
         </SidebarGroup>
       </SidebarContent>
+      <SpaceSwitcher />
       <SidebarChromeFooter />
     </>
   );

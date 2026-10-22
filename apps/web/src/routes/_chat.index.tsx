@@ -19,6 +19,8 @@ import {
   useThreadShells,
 } from "../state/entities";
 import { useEnvironments } from "../state/environments";
+import { SpaceIndexGate } from "../spaces/SpaceIndexGate";
+import { useSpaceScopedProjects, useSpaceScopedThreads } from "../spaces/useSpaceScope";
 
 function ChatIndexRouteView() {
   const { authGateState } = Route.useRouteContext();
@@ -29,12 +31,16 @@ function ChatIndexRouteView() {
     if (environments.length === 0) return <HostedEmptyState />;
   }
 
-  return <IndexDraftLanding />;
+  return (
+    <SpaceIndexGate>
+      <IndexDraftLanding />
+    </SpaceIndexGate>
+  );
 }
 
 function IndexDraftLanding() {
-  const projects = useProjects();
-  const threads = useThreadShells();
+  const projects = useSpaceScopedProjects(useProjects());
+  const threads = useSpaceScopedThreads(useThreadShells());
   const bootstrapped = useAllEnvironmentShellsBootstrapped();
   const handleNewThread = useNewThreadHandler();
   const router = useRouter();
