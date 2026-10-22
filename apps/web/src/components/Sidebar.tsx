@@ -221,6 +221,7 @@ import {
   useSpaceScopedProjectGroups,
   useSpaceScopedThreads,
 } from "../spaces/useSpaceScope";
+import { SpaceSwipe } from "../spaces/SpaceSwipeGesture";
 
 function sameSidebarProviderEntries(
   left: ReadonlyMap<string, SidebarProviderEntry>,
@@ -2758,6 +2759,7 @@ export default function Sidebar() {
         }
       >
         <SidebarGroup className="flex-1" role="presentation">
+          <SpaceSwipe />
           {isSearchingThreads ? null : <SpaceSidebarNotice />}
           {isSearchingThreads ? (
             threadSearchResults.length > 0 ? (

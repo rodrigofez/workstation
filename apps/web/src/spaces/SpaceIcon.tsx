@@ -3,40 +3,40 @@ import { InboxIcon } from "lucide-react";
 import { cn } from "~/lib/utils";
 import type { SpaceColor, SpaceSwitcherEntry } from "./spacesModel";
 
-// Static class names so Tailwind keeps them. Each color reads in light and
-// dark mode; the tint is deliberately faint and never touches app accents.
+// Static class names so Tailwind keeps them. The tint is Tailwind's 500 shade
+// as raw OKLCH because SpaceTint paints it from a scoped style rule.
 export const SPACE_COLOR_CLASSES: Record<
   SpaceColor,
   { readonly label: string; readonly fill: string; readonly soft: string; readonly tint: string }
 > = {
-  blue: { label: "Blue", fill: "bg-blue-500", soft: "bg-blue-500/18", tint: "bg-blue-500/[0.05]" },
+  blue: { label: "Blue", fill: "bg-blue-500", soft: "bg-blue-500/18", tint: "62.3% 0.214 259.815" },
   violet: {
     label: "Violet",
     fill: "bg-violet-500",
     soft: "bg-violet-500/18",
-    tint: "bg-violet-500/[0.05]",
+    tint: "60.6% 0.25 292.717",
   },
-  pink: { label: "Pink", fill: "bg-pink-500", soft: "bg-pink-500/18", tint: "bg-pink-500/[0.05]" },
-  red: { label: "Red", fill: "bg-red-500", soft: "bg-red-500/18", tint: "bg-red-500/[0.05]" },
+  pink: { label: "Pink", fill: "bg-pink-500", soft: "bg-pink-500/18", tint: "65.6% 0.241 354.308" },
+  red: { label: "Red", fill: "bg-red-500", soft: "bg-red-500/18", tint: "63.7% 0.237 25.331" },
   orange: {
     label: "Orange",
     fill: "bg-orange-500",
     soft: "bg-orange-500/18",
-    tint: "bg-orange-500/[0.05]",
+    tint: "70.5% 0.213 47.604",
   },
   amber: {
     label: "Amber",
     fill: "bg-amber-500",
     soft: "bg-amber-500/18",
-    tint: "bg-amber-500/[0.05]",
+    tint: "76.9% 0.188 70.08",
   },
   green: {
     label: "Green",
     fill: "bg-green-500",
     soft: "bg-green-500/18",
-    tint: "bg-green-500/[0.05]",
+    tint: "72.3% 0.219 149.579",
   },
-  teal: { label: "Teal", fill: "bg-teal-500", soft: "bg-teal-500/18", tint: "bg-teal-500/[0.05]" },
+  teal: { label: "Teal", fill: "bg-teal-500", soft: "bg-teal-500/18", tint: "70.4% 0.14 182.503" },
 };
 
 export function SpaceIcon({

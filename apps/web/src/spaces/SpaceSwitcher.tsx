@@ -8,6 +8,7 @@ import { Popover, PopoverPopup, PopoverTrigger } from "../components/ui/popover"
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../components/ui/tooltip";
 import { SpaceEditorForm } from "./SpaceEditorForm";
 import { SPACE_COLOR_CLASSES, SpaceIcon } from "./SpaceIcon";
+import { SpaceTint } from "./SpaceTint";
 import { UNASSIGNED_SPACE_ID, type SpaceSwitcherEntry } from "./spacesModel";
 import { useSpacesStore } from "./spacesStore";
 import {
@@ -110,6 +111,7 @@ export function SpaceSwitcher() {
       aria-label="Spaces"
       className="flex shrink-0 items-center gap-0.5 overflow-x-auto px-2 pt-1 [scrollbar-width:none]"
     >
+      <SpaceTint />
       {view.switcher.map((entry) => (
         <SpaceButton
           key={entry.id}
