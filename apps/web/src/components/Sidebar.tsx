@@ -212,6 +212,11 @@ import {
 import { SpaceSidebarNotice } from "../spaces/SpaceSidebarNotice";
 import { SpaceLabel, SpaceSwitcher } from "../spaces/SpaceSwitcher";
 import {
+  applyMoveToSpaceChoice,
+  isMoveToSpaceChoice,
+  withMoveToSpaceMenu,
+} from "../spaces/threadSpaceMenu";
+import {
   useSpaceDraftFilter,
   useSpaceScopedProjectGroups,
   useSpaceScopedThreads,
@@ -2279,7 +2284,7 @@ export default function Sidebar() {
             ),
           ) ?? null;
         const clicked = await settlePromise(() =>
-          api.contextMenu.show(
+          withMoveToSpaceMenu(api.contextMenu, thread).show(
             buildThreadActionMenuItems({
               canOperate: readEnvironmentScope(
                 threadRef.environmentId,
@@ -2312,6 +2317,10 @@ export default function Sidebar() {
           ),
         );
         if (clicked._tag === "Failure" || clicked.value === null) return;
+        if (isMoveToSpaceChoice(clicked.value)) {
+          applyMoveToSpaceChoice(clicked.value, thread);
+          return;
+        }
         if (threadActionRequiresOperate(clicked.value) && !checkThreadOperations([thread])) return;
         if (clicked.value?.startsWith("snooze:")) {
           const preset =

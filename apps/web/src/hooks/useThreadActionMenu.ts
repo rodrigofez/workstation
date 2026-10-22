@@ -46,6 +46,11 @@ import { useCopyToClipboard } from "./useCopyToClipboard";
 import { useNewThreadHandler } from "./useHandleNewThread";
 import { useClientSettings } from "./useSettings";
 import { useThreadActions } from "./useThreadActions";
+import {
+  applyMoveToSpaceChoice,
+  isMoveToSpaceChoice,
+  withMoveToSpaceMenu,
+} from "../spaces/threadSpaceMenu";
 
 function failureToast(title: string, error: unknown) {
   toastManager.add(
@@ -142,8 +147,14 @@ export function useThreadActionMenu(input: {
         supports,
         snoozePresets,
       });
-      const clicked = await settlePromise(() => api.contextMenu.show(items, position));
+      const clicked = await settlePromise(() =>
+        withMoveToSpaceMenu(api.contextMenu, thread).show(items, position),
+      );
       if (clicked._tag === "Failure" || clicked.value === null) return;
+      if (isMoveToSpaceChoice(clicked.value)) {
+        applyMoveToSpaceChoice(clicked.value, thread);
+        return;
+      }
       const action: ThreadActionMenuId = clicked.value;
       if (
         threadActionRequiresOperate(action) &&

@@ -232,6 +232,7 @@ import { buildSidebarProjectPickerEntries } from "../sidebarProjectGrouping";
 import { PullRequestGlyph } from "~/components/pullRequest/pullRequestIcons";
 import { readPullRequestListPreferences } from "~/components/pullRequest/pullRequestListPreferences";
 import { useThreadRouteTarget } from "../hooks/useThreadRouteTarget";
+import { usePaletteScopedProjectGroups, usePaletteSpacesToggle } from "../spaces/paletteSpaces";
 
 const EMPTY_BROWSE_ENTRIES: FilesystemBrowseResult["entries"] = [];
 
@@ -599,7 +600,8 @@ function OpenCommandPaletteDialog(props: {
   const [isRemoteProjectLookingUp, setIsRemoteProjectLookingUp] = useState(false);
   const [isRemoteProjectCloning, setIsRemoteProjectCloning] = useState(false);
   const { environmentLabelById, projectEnvironmentLocationById } = useEnvironmentLookups();
-  const projectGroups = useSortedProjectGroups(environmentLabelById);
+  const spacesToggle = usePaletteSpacesToggle();
+  const projectGroups = usePaletteScopedProjectGroups(useSortedProjectGroups(environmentLabelById));
   const contextualProjectRef = resolveThreadActionProjectRef({
     activeDraftThread,
     activeThread: activeThread ?? undefined,
@@ -2632,7 +2634,9 @@ function OpenCommandPaletteDialog(props: {
     >
       {`Open in ${fileManagerName}`}
     </CommandFooterAction>
-  ) : null;
+  ) : (
+    spacesToggle
+  );
 
   return (
     <CommandPaletteContent
