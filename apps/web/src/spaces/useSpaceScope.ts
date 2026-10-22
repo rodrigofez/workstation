@@ -9,6 +9,7 @@ import {
   type SpacesState,
   type SpacesView,
 } from "./spacesModel";
+import { useSpacePageId } from "./spacePage";
 import { useSpacesStore } from "./spacesStore";
 
 // Integration hooks for upstream lists. Each returns its input untouched while
@@ -20,10 +21,12 @@ export interface SpaceScope {
   readonly spaceId: string;
 }
 
+// Inside a space page this is the page's space, which may not be the active one.
 function useSpaceScope(): SpaceScope | null {
   const view = useSpacesStore((store) => store.view);
   const state = useSpacesStore((store) => store.state);
-  return view === null ? null : { view, state, spaceId: view.activeSpaceId };
+  const pageId = useSpacePageId();
+  return view === null ? null : { view, state, spaceId: pageId ?? view.activeSpaceId };
 }
 
 export function readSpaceScope(): SpaceScope | null {

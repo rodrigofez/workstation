@@ -40,6 +40,7 @@ import {
 import LegacyThreadSidebar from "./LegacySidebar";
 import { useThreadVisitedMigration } from "../hooks/useThreadVisitedMigration";
 import ThreadSidebar from "./Sidebar";
+import { SpaceSidebarPages } from "../spaces/SpaceSidebarPages";
 import { SpacesCoordinator } from "../spaces/SpacesCoordinator";
 import { SettingsSidebarNav } from "./settings/SettingsSidebarNav";
 import { SidebarBrandWidthProbe, SidebarChromeHeader } from "./sidebar/SidebarChrome";
@@ -425,7 +426,7 @@ export function AppSidebarLayout({ children }: { children: ReactNode }) {
           ) : legacySidebarEnabled ? (
             <LegacyThreadSidebar />
           ) : (
-            <ThreadSidebar />
+            <SpaceSidebarPages sidebar={<ThreadSidebar />} />
           )}
           <SidebarRail onDoubleClick={resetSidebarWidth} />
         </Sidebar>

@@ -17,6 +17,8 @@ import {
   type SpaceTargetLookup,
 } from "./spacesModel";
 import { useSpacesStore } from "./spacesStore";
+import { scheduleSpaceNavigation } from "./spaceNavigation";
+import { scrollSidebarToSpace } from "./spaceScroll";
 
 export const spaceTargetLookup: SpaceTargetLookup = {
   thread: (ref) => {
@@ -85,17 +87,22 @@ export interface SwitchSpaceOptions {
   // False when a route already shows the space's thread (cross-space links).
   readonly navigate?: boolean;
   readonly hud?: boolean;
+  // Scroll the sidebar pages to the space instead of jumping to it.
+  readonly animate?: boolean;
 }
 
 // Switching only changes what the client shows: running turns, sessions and
 // providers are never touched.
 export function useSwitchSpace() {
+  const router = useRouter();
   const navigateToTarget = useNavigateToSpaceTarget();
   const clearSelection = useThreadSelectionStore((store) => store.clearSelection);
   return (spaceId: string, options?: SwitchSpaceOptions) => {
     const before = useSpacesStore.getState();
     if (before.view === null || before.state.activeSpaceId === spaceId) return;
     const fromSpaceId = before.state.activeSpaceId;
+    // The strip scrolls on the compositor while the switch below renders.
+    if (options?.animate) scrollSidebarToSpace(spaceId);
     const picker = useUiStateStore.getState().sidebarProjectScopeKey;
     before.update((state) => switchSpace(rememberSpacePicker(state, fromSpaceId, picker), spaceId));
     const after = useSpacesStore.getState();
@@ -104,6 +111,20 @@ export function useSwitchSpace() {
     useUiStateStore.getState().setSidebarProjectScopeKey(spacePicker(after.state, spaceId));
     if (options?.hud) useSpaceHudStore.getState().show(spaceId);
     if (options?.navigate === false) return;
-    void navigateToTarget(resolveSwitchTarget(after.view, after.state, spaceId, spaceTargetLookup));
+    scheduleSpaceNavigation({
+      spaceId,
+      href: router.state.location.href,
+      current: () => ({
+        activeSpaceId: useSpacesStore.getState().view?.activeSpaceId ?? null,
+        href: router.state.location.href,
+      }),
+      navigate: () => {
+        const latest = useSpacesStore.getState();
+        if (latest.view === null) return;
+        void navigateToTarget(
+          resolveSwitchTarget(latest.view, latest.state, spaceId, spaceTargetLookup),
+        );
+      },
+    });
   };
 }

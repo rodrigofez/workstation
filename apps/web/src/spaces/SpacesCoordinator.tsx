@@ -247,7 +247,9 @@ function useSpaceKeyboardShortcuts(switchSpace: ReturnType<typeof useSwitchSpace
       event.preventDefault();
       event.stopPropagation();
       const spaceId = resolveSpaceShortcut(view, spaceShortcutFromCommand(command));
-      if (spaceId !== null) switchSpace(spaceId, { hud: !sidebarVisible });
+      if (spaceId !== null) {
+        switchSpace(spaceId, { hud: !sidebarVisible, animate: sidebarVisible });
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);

@@ -20,9 +20,9 @@ It builds an unsigned app for this Mac's architecture, ad-hoc signs it so macOS 
 
 ## Spaces
 
-A space is a named set of projects with an emoji and a color, like Zen Browser's spaces. One is active at a time, and it scopes the sidebar, the command palette (a footer toggle searches all spaces), thread next/previous/jump, and new threads. Switch from the icons in the sidebar footer, with a two-finger swipe over the thread list, or with `⌘⌥←`/`⌘⌥→` and `⌃1`–`⌃9`.
+A space is a named set of projects with an emoji and a color, like Zen Browser's spaces. Its color tints the sidebar; each space's editor sets the hue and how strong the tint is (0 turns it off). One is active at a time, and it scopes the sidebar, the command palette (a footer toggle searches all spaces), thread next/previous/jump, and new threads. Switch from the icons in the sidebar footer, with a two-finger swipe over the sidebar (one space per swipe), or with `⌘⌥←`/`⌘⌥→` and `⌃1`–`⌃9`.
 
-- **Sorting.** New projects, including ones created from iOS, the CLI or an agent, land in **Unassigned**. Its sidebar header has a one-click chip per space. Settings → Spaces lists every project with a space picker, and manages spaces themselves (rename, emoji, color, reorder, delete). Deleting a space only moves its projects back to Unassigned.
+- **Sorting.** New projects, including ones created from iOS, the CLI or an agent, land in **Unassigned**. Its sidebar lists them with one-click space icons on each row. Settings → Spaces lists every project with a space picker, and manages spaces themselves (rename, emoji, color, reorder, delete). Deleting a space only moves its projects back to Unassigned.
 - **Moving.** Right-click a thread → **Move project to space** moves the thread's whole project, including its copies on other environments. A thread without a project moves on its own.
 - **Shortcuts** are rebound in Settings → Spaces, not Settings → Keybindings: the keybinding list is validated by the server, which the fork leaves stock.
 - **Local only.** Spaces live in this app's (or this browser's) local storage. The server, the official apps and other devices never see them.
