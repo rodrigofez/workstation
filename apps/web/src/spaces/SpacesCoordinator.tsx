@@ -3,7 +3,8 @@ import { scopedThreadKey, scopeThreadRef } from "@t3tools/client-runtime/environ
 import { derivePhysicalProjectKey } from "@t3tools/client-runtime/state/project-grouping";
 import { useEffect, useRef } from "react";
 
-import { onOpenCommandPalette, isCommandPaletteOpen } from "../commandPaletteBus";
+import { isCommandPaletteOpen } from "../commandPaletteBus";
+import { useCommandPaletteStore } from "../commandPaletteStore";
 import { useComposerDraftStore } from "../composerDraftStore";
 import { filterSidebarV2VisibleThreads } from "../components/Sidebar.logic";
 import { useSidebarVisibility } from "../components/ui/sidebar";
@@ -192,8 +193,10 @@ function useAddProjectCapture() {
   const seenRef = useRef<ReadonlySet<string> | null>(null);
   useEffect(
     () =>
-      onOpenCommandPalette((detail) => {
-        if (detail.open === "add-project") markAddProjectStarted();
+      useCommandPaletteStore.subscribe((state, previous) => {
+        if (state.session !== previous.session && state.openIntent?.kind === "add-project") {
+          markAddProjectStarted();
+        }
       }),
     [],
   );

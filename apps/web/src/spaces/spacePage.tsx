@@ -33,6 +33,10 @@ export function OutsideSpacePage({ children }: { children: ReactNode }) {
   return useSpacePageId() === null ? children : null;
 }
 
+export function InsideSpacePage({ children }: { children: ReactNode }) {
+  return useSpacePageId() === null ? null : children;
+}
+
 // The project picker is one global value that follows the active space. A
 // background page shows the picker its space will restore, so it already
 // matches what the page looks like once switched to.
