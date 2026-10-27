@@ -3,7 +3,8 @@ import { scopedThreadKey, scopeThreadRef } from "@t3tools/client-runtime/environ
 import { derivePhysicalProjectKey } from "@t3tools/client-runtime/state/project-grouping";
 import { useEffect, useRef } from "react";
 
-import { onOpenCommandPalette, isCommandPaletteOpen } from "../commandPaletteBus";
+import { isCommandPaletteOpen } from "../commandPaletteBus";
+import { useCommandPaletteStore } from "../commandPaletteStore";
 import { useComposerDraftStore } from "../composerDraftStore";
 import { filterSidebarV2VisibleThreads } from "../components/Sidebar.logic";
 import { useSidebarVisibility } from "../components/ui/sidebar";
@@ -108,6 +109,7 @@ function useSpaceRouteTracking(switchSpace: ReturnType<typeof useSwitchSpace>) {
         : { kind: "draft", draftId: routeTarget.draftId };
   const targetKey = routeTargetKey(target);
   const handledKeyRef = useRef<string | null>(null);
+  // oxlint-disable-next-line t3code/react-effect-budget -- Routes change from links, history and the palette, so the visit is recorded where the route is read, retrying until the catalog knows the thread.
   useEffect(() => {
     if (target === null || view === null || handledKeyRef.current === targetKey) return;
     const ref =
@@ -133,6 +135,7 @@ function useSpacePickerTracking() {
   const pickerKey = useUiStateStore((store) => store.sidebarProjectScopeKey);
   const activeSpaceId = useSpacesStore((store) => store.view?.activeSpaceId ?? null);
   const appliedRef = useRef(false);
+  // oxlint-disable-next-line t3code/react-effect-budget -- The upstream picker key is a global store value; mirroring it per space has to follow its changes.
   useEffect(() => {
     if (activeSpaceId === null) return;
     const { state, update } = useSpacesStore.getState();
@@ -156,6 +159,7 @@ function useScratchDraftRecording() {
   const view = useSpacesStore((store) => store.view);
   const seenRef = useRef<ReadonlySet<string> | null>(null);
   const pendingRef = useRef(new Map<string, string>());
+  // oxlint-disable-next-line t3code/react-effect-budget -- Drafts appear from many entry points; recording their space has to observe the draft store.
   useEffect(() => {
     if (view === null) return;
     if (seenRef.current === null) {
@@ -190,13 +194,17 @@ function useAddProjectCapture() {
   const projects = useProjects();
   const ready = useSpacesStore((store) => store.catalog?.ready === true);
   const seenRef = useRef<ReadonlySet<string> | null>(null);
+  // oxlint-disable-next-line t3code/react-effect-budget -- Subscribes to the palette store for the component's lifetime.
   useEffect(
     () =>
-      onOpenCommandPalette((detail) => {
-        if (detail.open === "add-project") markAddProjectStarted();
+      useCommandPaletteStore.subscribe((state, previous) => {
+        if (state.session !== previous.session && state.openIntent?.kind === "add-project") {
+          markAddProjectStarted();
+        }
       }),
     [],
   );
+  // oxlint-disable-next-line t3code/react-effect-budget -- Projects arrive from the server; claiming a new one for its space has to observe the project list.
   useEffect(() => {
     if (!ready) return;
     const physicalKeys = new Map(
@@ -228,6 +236,7 @@ function useAddProjectCapture() {
 function useSpaceAutoSwitch(switchSpace: ReturnType<typeof useSwitchSpace>) {
   const view = useSpacesStore((store) => store.view);
   const storedActiveSpaceId = useSpacesStore((store) => store.state.activeSpaceId);
+  // oxlint-disable-next-line t3code/react-effect-budget -- The view can resolve to another space after a delete or an emptied Unassigned; the route has to follow.
   useEffect(() => {
     if (view === null || useSpacesStore.getState().catalog?.ready !== true) return;
     if (view.activeSpaceId !== storedActiveSpaceId) switchSpace(view.activeSpaceId);
@@ -237,6 +246,7 @@ function useSpaceAutoSwitch(switchSpace: ReturnType<typeof useSwitchSpace>) {
 function useSpaceKeyboardShortcuts(switchSpace: ReturnType<typeof useSwitchSpace>) {
   const overrides = useSpaceShortcutStore((store) => store.overrides);
   const sidebarVisible = useSidebarVisibility();
+  // oxlint-disable-next-line t3code/react-effect-budget -- Window keydown listener for space shortcuts, removed on unmount.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.repeat || isCommandPaletteOpen()) return;
@@ -259,7 +269,9 @@ function useSpaceKeyboardShortcuts(switchSpace: ReturnType<typeof useSwitchSpace
 export function SpacesCoordinator() {
   const catalog = useSpacesCatalog();
   const setCatalog = useSpacesStore((store) => store.setCatalog);
+  // oxlint-disable-next-line t3code/react-effect-budget -- The catalog is built in render, but the store is shared outside React.
   useEffect(() => setCatalog(catalog), [catalog, setCatalog]);
+  // oxlint-disable-next-line t3code/react-effect-budget -- Marks the coordinator mounted and clears the catalog on unmount.
   useEffect(() => {
     setSpacesCoordinatorMounted(true);
     return () => {

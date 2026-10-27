@@ -1,14 +1,85 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
   <defs>
-    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#0f766e"/>
-      <stop offset="1" stop-color="#042f2e"/>
+    <clipPath id="tile-clip">
+      <rect x="100" y="100" width="824" height="824" rx="185" ry="185"/>
+    </clipPath>
+    <radialGradient id="tile" cx="0.5" cy="0.5" r="0.72">
+      <stop offset="0" stop-color="#1b1c33"/>
+      <stop offset="0.6" stop-color="#0c0d19"/>
+      <stop offset="1" stop-color="#05060b"/>
+    </radialGradient>
+    <radialGradient id="bloom" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#8b7dff" stop-opacity="0.24"/>
+      <stop offset="0.6" stop-color="#5b4bd6" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#5b4bd6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="core" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.45"/>
+      <stop offset="0.35" stop-color="#c4b5fd" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.08"/>
+      <stop offset="0.4" stop-color="#ffffff" stop-opacity="0"/>
     </linearGradient>
-    <linearGradient id="mark" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffffff"/>
-      <stop offset="1" stop-color="#99f6e4"/>
+    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.24"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0.04"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.10"/>
     </linearGradient>
+    <linearGradient id="fan" gradientUnits="userSpaceOnUse" x1="100" y1="0" x2="924" y2="0">
+      <stop offset="0" stop-color="#22c55e"/>
+      <stop offset="0.25" stop-color="#2dd4bf"/>
+      <stop offset="0.5" stop-color="#818cf8"/>
+      <stop offset="0.75" stop-color="#f472b6"/>
+      <stop offset="1" stop-color="#fb923c"/>
+    </linearGradient>
+    <linearGradient id="beam" gradientUnits="userSpaceOnUse" x1="100" y1="0" x2="924" y2="0">
+      <stop offset="0" stop-color="#2563eb"/>
+      <stop offset="0.5" stop-color="#8b7bff"/>
+      <stop offset="1" stop-color="#f0a5e0"/>
+    </linearGradient>
+    <linearGradient id="beam-core" gradientUnits="userSpaceOnUse" x1="100" y1="0" x2="924" y2="0">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.15"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.45"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="24"/>
+    </filter>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+    <g id="fan-ribbons" fill="url(#fan)">
+      <path opacity="0.38" d="M40 243 C362 257 662 767 984 753 L984 781 C662 767 362 257 40 271Z"/>
+      <path opacity="0.6" d="M40 323 C362 342 662 682 984 663 L984 701 C662 682 362 342 40 361Z"/>
+      <path opacity="0.85" d="M40 402 C362 427 662 597 984 572 L984 622 C662 597 362 427 40 452Z"/>
+      <path opacity="1" d="M40 482 C362 512 662 512 984 482 L984 542 C662 512 362 512 40 542Z"/>
+      <path opacity="0.85" d="M40 572 C362 597 662 427 984 402 L984 452 C662 427 362 597 40 622Z"/>
+      <path opacity="0.6" d="M40 663 C362 682 662 342 984 323 L984 361 C662 342 362 682 40 701Z"/>
+      <path opacity="0.38" d="M40 753 C362 767 662 257 984 243 L984 271 C662 257 362 767 40 781Z"/>
+    </g>
   </defs>
-  <rect x="100" y="100" width="824" height="824" rx="185" ry="185" fill="url(#tile)"/>
-  <path fill="url(#mark)" d="M232 330 H332 L402 594 L466 330 H558 L622 594 L692 330 H792 L676 714 H584 L512 450 L440 714 H348 Z"/>
+
+  <g filter="url(#shadow)">
+    <rect x="100" y="100" width="824" height="824" rx="185" ry="185" fill="url(#tile)"/>
+  </g>
+
+  <g clip-path="url(#tile-clip)">
+    <circle cx="512" cy="512" r="400" fill="url(#bloom)"/>
+    <use href="#fan-ribbons" filter="url(#glow)" opacity="0.42"/>
+    <use href="#fan-ribbons"/>
+    <g fill="#ffffff" opacity="0.18">
+      <path d="M40 413.3 C362 415.8 662 608.3 984 605.8 L984 610.8 C662 608.3 362 415.8 40 418.3Z"/>
+      <path d="M40 495.5 C362 498.5 662 525.5 984 522.5 L984 528.5 C662 525.5 362 498.5 40 501.5Z"/>
+      <path d="M40 583.3 C362 585.8 662 438.3 984 435.8 L984 440.8 C662 438.3 362 585.8 40 588.3Z"/>
+    </g>
+    <circle cx="512" cy="512" r="56" fill="url(#core)"/>
+    <rect x="100" y="100" width="824" height="824" fill="url(#sheen)"/>
+  </g>
+
+  <rect x="101.5" y="101.5" width="821" height="821" rx="183.5" ry="183.5" fill="none" stroke="url(#rim)" stroke-width="3"/>
 </svg>

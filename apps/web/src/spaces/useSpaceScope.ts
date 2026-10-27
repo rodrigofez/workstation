@@ -78,6 +78,16 @@ export function useSpaceScopedProjects<
   );
 }
 
+export function readSpaceScopedProjects<
+  T extends { readonly environmentId: EnvironmentId; readonly id: string },
+>(projects: readonly T[]): readonly T[] {
+  const scope = readSpaceScope();
+  if (scope === null) return projects;
+  return projects.filter((project) =>
+    isProjectInSpace(scope, { environmentId: project.environmentId, projectId: project.id }),
+  );
+}
+
 export function useSpaceScopedProjectGroups<
   T extends { readonly memberProjectRefs: readonly SpacesProjectRef[] },
 >(groups: readonly T[]): readonly T[] {

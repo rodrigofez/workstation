@@ -15,6 +15,7 @@ export function SpaceSwitchHud() {
   const entry = useSpacesStore((store) =>
     store.view?.switcher.find((candidate) => candidate.id === spaceId),
   );
+  // oxlint-disable-next-line t3code/react-effect-budget -- Hides the HUD after a fixed delay; the timer is cleared on change or unmount.
   useEffect(() => {
     if (spaceId === null) return;
     const timeout = window.setTimeout(

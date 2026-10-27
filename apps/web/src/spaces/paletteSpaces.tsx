@@ -41,6 +41,7 @@ export function usePaletteSpacesToggle() {
     (store) =>
       store.view?.switcher.find((entry) => entry.id === store.view?.activeSpaceId)?.name ?? null,
   );
+  // oxlint-disable-next-line t3code/react-effect-budget -- The palette closes without a handler here, so only unmount can reset the all-spaces toggle.
   useEffect(() => () => usePaletteAllSpacesStore.getState().setAllSpaces(false), []);
   if (activeName === null) return null;
   return (
