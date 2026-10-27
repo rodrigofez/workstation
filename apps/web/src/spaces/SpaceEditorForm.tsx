@@ -75,7 +75,7 @@ export function SpaceEditorForm({
             aria-label="Emoji"
             className="w-14"
             value={emojiText}
-            placeholder="—"
+            placeholder="-"
             onChange={(event) => setEmojiText(event.target.value)}
           />
           {QUICK_EMOJIS.map((candidate) => (

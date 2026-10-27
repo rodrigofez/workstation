@@ -16,10 +16,12 @@ export function SpaceTint() {
       store.view?.switcher.find((entry) => entry.id === store.view?.activeSpaceId)?.color ?? null,
   );
   const markerRef = useRef<HTMLSpanElement>(null);
+  // oxlint-disable-next-line t3code/react-effect-budget -- Mounts the tint layers on the sidebar element, which this component does not render.
   useEffect(() => {
     const sidebar = markerRef.current?.closest<HTMLElement>('[data-sidebar="sidebar"]');
     return sidebar ? mountTintLayers(sidebar) : undefined;
   }, []);
+  // oxlint-disable-next-line t3code/react-effect-budget -- Pushes the active space's color into the tint layers outside React.
   useEffect(() => setRestingTint(color), [color]);
   return (
     <>

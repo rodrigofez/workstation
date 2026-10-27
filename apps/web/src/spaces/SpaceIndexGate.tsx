@@ -83,6 +83,7 @@ export function SpaceIndexGate({ children }: { children: ReactNode }) {
       ? null
       : resolveSwitchTarget(view, state, spaceId, spaceTargetLookup);
   const restore = target !== null && target.kind !== "landing";
+  // oxlint-disable-next-line t3code/react-effect-budget -- Restoring the space's last route is a navigation, which cannot run during render.
   useEffect(() => {
     if (!restore || target === null || restoredSpaceRef.current === spaceId) return;
     restoredSpaceRef.current = spaceId;

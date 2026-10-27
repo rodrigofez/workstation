@@ -26,15 +26,10 @@ function sameRange(left: PageRange | null, right: PageRange | null): boolean {
   return left === right || (left?.[0] === right?.[0] && left?.[1] === right?.[1]);
 }
 
-// Renders the thread sidebar once per space, side by side in a horizontally
-// scroll-snapped strip, like Zen's workspaces. Swiping is the browser's own
-// scrolling (compositor-driven, with momentum and edge handling), so it never
-// waits on React; the active space only changes once scrolling settles.
-//
-// The active page and its neighbours are mounted and visible so they can
-// scroll in at any time; pages further away are hidden <Activity> trees React
-// keeps current at low priority, revealed one page ahead of the scroll.
-// Window chrome and the switcher sit around the strip and stay put.
+// One thread sidebar per space in a scroll-snapped strip. Swiping is native
+// scrolling, so it never waits on React; the active space changes on settle.
+// Neighbours stay mounted to scroll in; farther pages are hidden <Activity>
+// trees revealed one page ahead of the scroll.
 export function SpaceSidebarPages({ sidebar }: { sidebar: ReactNode }) {
   const switchSpace = useSwitchSpace();
   const activeSpaceId = useSpacesStore(
@@ -57,6 +52,7 @@ export function SpaceSidebarPages({ sidebar }: { sidebar: ReactNode }) {
     (scrollRange !== null && index >= scrollRange[0] && index <= scrollRange[1]);
 
   // Follows switches made anywhere else (palette, routes, deletes) instantly.
+  // oxlint-disable-next-line t3code/react-effect-budget -- Scrolls the strip to a switch made elsewhere before paint, so it never jumps.
   useLayoutEffect(() => {
     const strip = stripRef.current;
     if (!strip || scrollTargetRef.current !== null) return;
@@ -101,6 +97,7 @@ export function SpaceSidebarPages({ sidebar }: { sidebar: ReactNode }) {
     endTintBlend();
   });
 
+  // oxlint-disable-next-line t3code/react-effect-budget -- Owns the strip's scroll listeners and the space-scroll registration, released on unmount.
   useEffect(() => {
     const strip = stripRef.current;
     if (!strip) return;

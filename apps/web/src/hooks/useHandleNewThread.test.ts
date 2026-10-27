@@ -152,6 +152,7 @@ vi.mock("@tanstack/react-router", () => ({
   useRouter: () => testState.router,
 }));
 vi.mock("react", () => ({
+  createContext: () => null,
   useCallback: <T>(callback: T) => callback,
   useMemo: <T>(factory: () => T) => factory(),
 }));
