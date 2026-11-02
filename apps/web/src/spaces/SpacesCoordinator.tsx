@@ -10,7 +10,7 @@ import { filterSidebarV2VisibleThreads } from "../components/Sidebar.logic";
 import { useSidebarVisibility } from "../components/ui/sidebar";
 import { useSidebarProjectGroups } from "../hooks/useSidebarProjectGroups";
 import { useThreadRouteTarget } from "../hooks/useThreadRouteTarget";
-import { useProjects, useQuietThreadShells } from "../state/entities";
+import { useDelegatedUnderParent, useProjects, useQuietThreadShells } from "../state/entities";
 import { allReachableShellsLiveAtom } from "../state/shell";
 import { useUiStateStore } from "../uiStateStore";
 import { markAddProjectStarted, takeAddProjectOrigin } from "./addProjectOrigin";
@@ -22,6 +22,7 @@ import {
   recordSpaceVisit,
   rememberSpacePicker,
   resolveSpaceShortcut,
+  sameKeys,
   spaceOfThread,
   spacePicker,
   spacesProjectRefKey,
@@ -44,6 +45,7 @@ function parseTimestamp(value: string | null | undefined): number {
 function useSpacesCatalog(): SpacesCatalog {
   const groups = useSidebarProjectGroups();
   const threads = useQuietThreadShells();
+  const delegatedUnderParent = useDelegatedUnderParent();
   // Settled-offline environments count as ready: they keep their cached
   // projects, and waiting for them would stall sorting while the VPS is down.
   const shellsReady = useAtomValue(allReachableShellsLiveAtom);
@@ -78,9 +80,11 @@ function useSpacesCatalog(): SpacesCatalog {
       })),
       projectRefs: group.memberProjectRefs,
     })),
-    scratchThreadKeys: filterSidebarV2VisibleThreads(threads, scratchRefKeys).map((thread) =>
-      scopedThreadKey(scopeThreadRef(thread.environmentId, thread.id)),
-    ),
+    scratchThreadKeys: filterSidebarV2VisibleThreads(
+      threads,
+      scratchRefKeys,
+      delegatedUnderParent,
+    ).map((thread) => scopedThreadKey(scopeThreadRef(thread.environmentId, thread.id))),
   };
 }
 
@@ -109,7 +113,7 @@ function useSpaceRouteTracking(switchSpace: ReturnType<typeof useSwitchSpace>) {
         : { kind: "draft", draftId: routeTarget.draftId };
   const targetKey = routeTargetKey(target);
   const handledKeyRef = useRef<string | null>(null);
-  // oxlint-disable-next-line t3code/react-effect-budget -- Routes change from links, history and the palette, so the visit is recorded where the route is read, retrying until the catalog knows the thread.
+  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- Routes change from links, history and the palette, so the visit is recorded where the route is read, retrying until the catalog knows the thread.
   useEffect(() => {
     if (target === null || view === null || handledKeyRef.current === targetKey) return;
     const ref =
@@ -132,10 +136,10 @@ function useSpaceRouteTracking(switchSpace: ReturnType<typeof useSwitchSpace>) {
 }
 
 function useSpacePickerTracking() {
-  const pickerKey = useUiStateStore((store) => store.sidebarProjectScopeKey);
+  const pickerKeys = useUiStateStore((store) => store.sidebarProjectScopeKeys);
   const activeSpaceId = useSpacesStore((store) => store.view?.activeSpaceId ?? null);
   const appliedRef = useRef(false);
-  // oxlint-disable-next-line t3code/react-effect-budget -- The upstream picker key is a global store value; mirroring it per space has to follow its changes.
+  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- The upstream picker key is a global store value; mirroring it per space has to follow its changes.
   useEffect(() => {
     if (activeSpaceId === null) return;
     const { state, update } = useSpacesStore.getState();
@@ -143,13 +147,13 @@ function useSpacePickerTracking() {
       // The upstream picker key is global; the space's own selection wins.
       appliedRef.current = true;
       const remembered = spacePicker(state, activeSpaceId);
-      if (remembered !== pickerKey) {
-        useUiStateStore.getState().setSidebarProjectScopeKey(remembered);
+      if (!sameKeys(remembered, pickerKeys)) {
+        useUiStateStore.getState().setSidebarProjectScopeKeys(remembered);
         return;
       }
     }
-    update((current) => rememberSpacePicker(current, activeSpaceId, pickerKey));
-  }, [activeSpaceId, pickerKey]);
+    update((current) => rememberSpacePicker(current, activeSpaceId, pickerKeys));
+  }, [activeSpaceId, pickerKeys]);
 }
 
 // No-project drafts created in this session belong to the space that was
@@ -159,7 +163,7 @@ function useScratchDraftRecording() {
   const view = useSpacesStore((store) => store.view);
   const seenRef = useRef<ReadonlySet<string> | null>(null);
   const pendingRef = useRef(new Map<string, string>());
-  // oxlint-disable-next-line t3code/react-effect-budget -- Drafts appear from many entry points; recording their space has to observe the draft store.
+  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- Drafts appear from many entry points; recording their space has to observe the draft store.
   useEffect(() => {
     if (view === null) return;
     if (seenRef.current === null) {
@@ -194,7 +198,7 @@ function useAddProjectCapture() {
   const projects = useProjects();
   const ready = useSpacesStore((store) => store.catalog?.ready === true);
   const seenRef = useRef<ReadonlySet<string> | null>(null);
-  // oxlint-disable-next-line t3code/react-effect-budget -- Subscribes to the palette store for the component's lifetime.
+  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- Subscribes to the palette store for the component's lifetime.
   useEffect(
     () =>
       useCommandPaletteStore.subscribe((state, previous) => {
@@ -204,7 +208,7 @@ function useAddProjectCapture() {
       }),
     [],
   );
-  // oxlint-disable-next-line t3code/react-effect-budget -- Projects arrive from the server; claiming a new one for its space has to observe the project list.
+  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- Projects arrive from the server; claiming a new one for its space has to observe the project list.
   useEffect(() => {
     if (!ready) return;
     const physicalKeys = new Map(
@@ -236,7 +240,7 @@ function useAddProjectCapture() {
 function useSpaceAutoSwitch(switchSpace: ReturnType<typeof useSwitchSpace>) {
   const view = useSpacesStore((store) => store.view);
   const storedActiveSpaceId = useSpacesStore((store) => store.state.activeSpaceId);
-  // oxlint-disable-next-line t3code/react-effect-budget -- The view can resolve to another space after a delete or an emptied Unassigned; the route has to follow.
+  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- The view can resolve to another space after a delete or an emptied Unassigned; the route has to follow.
   useEffect(() => {
     if (view === null || useSpacesStore.getState().catalog?.ready !== true) return;
     if (view.activeSpaceId !== storedActiveSpaceId) switchSpace(view.activeSpaceId);
@@ -246,7 +250,7 @@ function useSpaceAutoSwitch(switchSpace: ReturnType<typeof useSwitchSpace>) {
 function useSpaceKeyboardShortcuts(switchSpace: ReturnType<typeof useSwitchSpace>) {
   const overrides = useSpaceShortcutStore((store) => store.overrides);
   const sidebarVisible = useSidebarVisibility();
-  // oxlint-disable-next-line t3code/react-effect-budget -- Window keydown listener for space shortcuts, removed on unmount.
+  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- Window keydown listener for space shortcuts, removed on unmount.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.repeat || isCommandPaletteOpen()) return;
@@ -269,9 +273,9 @@ function useSpaceKeyboardShortcuts(switchSpace: ReturnType<typeof useSwitchSpace
 export function SpacesCoordinator() {
   const catalog = useSpacesCatalog();
   const setCatalog = useSpacesStore((store) => store.setCatalog);
-  // oxlint-disable-next-line t3code/react-effect-budget -- The catalog is built in render, but the store is shared outside React.
+  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- The catalog is built in render, but the store is shared outside React.
   useEffect(() => setCatalog(catalog), [catalog, setCatalog]);
-  // oxlint-disable-next-line t3code/react-effect-budget -- Marks the coordinator mounted and clears the catalog on unmount.
+  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- Marks the coordinator mounted and clears the catalog on unmount.
   useEffect(() => {
     setSpacesCoordinatorMounted(true);
     return () => {

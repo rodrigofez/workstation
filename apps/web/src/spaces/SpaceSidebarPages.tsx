@@ -52,7 +52,7 @@ export function SpaceSidebarPages({ sidebar }: { sidebar: ReactNode }) {
     (scrollRange !== null && index >= scrollRange[0] && index <= scrollRange[1]);
 
   // Follows switches made anywhere else (palette, routes, deletes) instantly.
-  // oxlint-disable-next-line t3code/react-effect-budget -- Scrolls the strip to a switch made elsewhere before paint, so it never jumps.
+  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- Scrolls the strip to a switch made elsewhere before paint, so it never jumps.
   useLayoutEffect(() => {
     const strip = stripRef.current;
     if (!strip || scrollTargetRef.current !== null) return;
@@ -97,7 +97,7 @@ export function SpaceSidebarPages({ sidebar }: { sidebar: ReactNode }) {
     endTintBlend();
   });
 
-  // oxlint-disable-next-line t3code/react-effect-budget -- Owns the strip's scroll listeners and the space-scroll registration, released on unmount.
+  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- Owns the strip's scroll listeners and the space-scroll registration, released on unmount.
   useEffect(() => {
     const strip = stripRef.current;
     if (!strip) return;
