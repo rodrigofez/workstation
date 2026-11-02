@@ -5,7 +5,6 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { openCommandPalette } from "../commandPaletteBus";
 import { isElectron } from "../env";
 import { useScratchProject } from "../hooks/useScratchProject";
-import { useLegacySidebarEnabled } from "../hooks/useSettings";
 import { Button } from "../components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "../components/ui/empty";
 import { SidebarInset } from "../components/ui/sidebar";
@@ -74,7 +73,6 @@ export function SpaceIndexGate({ children }: { children: ReactNode }) {
   const view = useSpacesStore((store) => store.view);
   const state = useSpacesStore((store) => store.state);
   const ready = useSpacesStore((store) => store.catalog?.ready === true);
-  const legacySidebarEnabled = useLegacySidebarEnabled();
   const navigateToTarget = useNavigateToSpaceTarget();
   const restoredSpaceRef = useRef<string | null>(null);
   const spaceId = view?.activeSpaceId ?? null;
@@ -83,14 +81,13 @@ export function SpaceIndexGate({ children }: { children: ReactNode }) {
       ? null
       : resolveSwitchTarget(view, state, spaceId, spaceTargetLookup);
   const restore = target !== null && target.kind !== "landing";
-  // oxlint-disable-next-line t3code/react-effect-budget -- Restoring the space's last route is a navigation, which cannot run during render.
+  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- Restoring the space's last route is a navigation, which cannot run during render.
   useEffect(() => {
     if (!restore || target === null || restoredSpaceRef.current === spaceId) return;
     restoredSpaceRef.current = spaceId;
     void navigateToTarget(target, { replace: true });
   }, [navigateToTarget, restore, spaceId, target]);
 
-  if (legacySidebarEnabled) return children;
   // Until the first catalog lands, upstream's landing would open a draft in
   // the globally most recent project, which may belong to another space.
   if (view === null || !ready || restore) return null;

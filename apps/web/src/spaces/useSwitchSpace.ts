@@ -103,12 +103,12 @@ export function useSwitchSpace() {
     const fromSpaceId = before.state.activeSpaceId;
     // The strip scrolls on the compositor while the switch below renders.
     if (options?.animate) scrollSidebarToSpace(spaceId);
-    const picker = useUiStateStore.getState().sidebarProjectScopeKey;
+    const picker = useUiStateStore.getState().sidebarProjectScopeKeys;
     before.update((state) => switchSpace(rememberSpacePicker(state, fromSpaceId, picker), spaceId));
     const after = useSpacesStore.getState();
     if (after.view === null || after.view.activeSpaceId !== spaceId) return;
     clearSelection();
-    useUiStateStore.getState().setSidebarProjectScopeKey(spacePicker(after.state, spaceId));
+    useUiStateStore.getState().setSidebarProjectScopeKeys(spacePicker(after.state, spaceId));
     if (options?.hud) useSpaceHudStore.getState().show(spaceId);
     if (options?.navigate === false) return;
     scheduleSpaceNavigation({

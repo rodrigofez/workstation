@@ -318,11 +318,11 @@ describe("switching", () => {
 
     it("remembers the project picker selection per space", () => {
       let state = sortedState();
-      state = rememberSpacePicker(state, work, "repo:work");
-      state = rememberSpacePicker(state, personal, null);
+      state = rememberSpacePicker(state, work, ["repo:work"]);
+      state = rememberSpacePicker(state, personal, []);
 
-      expect(spacePicker(state, work)).toBe("repo:work");
-      expect(spacePicker(state, personal)).toBeNull();
+      expect(spacePicker(state, work)).toEqual(["repo:work"]);
+      expect(spacePicker(state, personal)).toEqual([]);
     });
   });
 
@@ -571,7 +571,7 @@ describe("persistence", () => {
       environmentId: "vps",
       threadId: "t1",
     });
-    state = rememberSpacePicker(state, "work", "repo:work");
+    state = rememberSpacePicker(state, "work", ["repo:work"]);
     state = switchSpace(state, "side");
 
     expect(parseSpacesState(JSON.parse(serializeSpacesState(state)))).toEqual(state);
@@ -606,7 +606,7 @@ describe("persistence", () => {
       scratchThreadSpaces: {},
       activeSpaceId: UNASSIGNED_SPACE_ID,
       lastTargetBySpace: { work: { kind: "draft", draftId: "d" } },
-      pickerBySpace: { work: "repo:work" },
+      pickerBySpace: { work: ["repo:work"] },
     });
   });
 });

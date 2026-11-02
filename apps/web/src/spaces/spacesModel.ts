@@ -67,7 +67,7 @@ export interface SpacesState {
   readonly scratchThreadSpaces: Readonly<Record<string, string>>;
   readonly activeSpaceId: string;
   readonly lastTargetBySpace: Readonly<Record<string, SpaceRouteTarget>>;
-  readonly pickerBySpace: Readonly<Record<string, string | null>>;
+  readonly pickerBySpace: Readonly<Record<string, readonly string[]>>;
 }
 
 export type SpaceRouteTarget =
@@ -324,14 +324,20 @@ export function recordSpaceVisit(
 export function rememberSpacePicker(
   state: SpacesState,
   spaceId: string,
-  pickerKey: string | null,
+  pickerKeys: readonly string[],
 ): SpacesState {
-  if (spacePicker(state, spaceId) === pickerKey) return state;
-  return { ...state, pickerBySpace: { ...state.pickerBySpace, [spaceId]: pickerKey } };
+  if (sameKeys(spacePicker(state, spaceId), pickerKeys)) return state;
+  return { ...state, pickerBySpace: { ...state.pickerBySpace, [spaceId]: [...pickerKeys] } };
 }
 
-export function spacePicker(state: SpacesState, spaceId: string): string | null {
-  return state.pickerBySpace[spaceId] ?? null;
+const NO_PICKER_KEYS: readonly string[] = [];
+
+export function spacePicker(state: SpacesState, spaceId: string): readonly string[] {
+  return state.pickerBySpace[spaceId] ?? NO_PICKER_KEYS;
+}
+
+export function sameKeys(a: readonly string[], b: readonly string[]): boolean {
+  return a.length === b.length && a.every((key, index) => key === b[index]);
 }
 
 export function resolveSwitchTarget(
@@ -580,14 +586,15 @@ export function parseSpacesState(raw: unknown): SpacesState {
       lastTargetBySpace[spaceId] = target;
     }
   }
-  const pickerBySpace: Record<string, string | null> = {};
+  const pickerBySpace: Record<string, readonly string[]> = {};
   for (const [spaceId, value] of Object.entries(
     isRecord(raw.pickerBySpace) ? raw.pickerBySpace : {},
   )) {
-    if (
-      (value === null || typeof value === "string") &&
-      (spaceIds.has(spaceId) || spaceId === UNASSIGNED_SPACE_ID)
-    ) {
+    if (!spaceIds.has(spaceId) && spaceId !== UNASSIGNED_SPACE_ID) continue;
+    // Pickers saved before upstream's multi-project scope hold one key or null.
+    if (value === null) pickerBySpace[spaceId] = [];
+    else if (typeof value === "string") pickerBySpace[spaceId] = [value];
+    else if (Array.isArray(value) && value.every((key) => typeof key === "string")) {
       pickerBySpace[spaceId] = value;
     }
   }
