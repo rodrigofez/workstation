@@ -1,5 +1,6 @@
 import { parseKeybindingShortcut } from "@t3tools/shared/keybindings";
 import { useNavigate } from "@tanstack/react-router";
+import { T, useGT, useMessages } from "gt-react";
 import { ArrowLeftIcon, ArrowRightIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
 
@@ -54,6 +55,7 @@ function SpaceRow({
   editing: boolean;
   onEditingChange: (editing: boolean) => void;
 }) {
+  const gt = useGT();
   return (
     <SettingsRow
       title={
@@ -66,14 +68,20 @@ function SpaceRow({
         <div className="flex items-center gap-1">
           <Popover open={editing} onOpenChange={onEditingChange}>
             <PopoverTrigger
-              render={<Button size="icon-sm" variant="ghost" aria-label={`Edit ${space.name}`} />}
+              render={
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  aria-label={gt("Edit {name}", { name: space.name })}
+                />
+              }
             >
               <PencilIcon />
             </PopoverTrigger>
             <PopoverPopup align="end">
               <SpaceEditorForm
                 initial={space}
-                submitLabel="Save"
+                submitLabel={gt("Save")}
                 onCancel={() => onEditingChange(false)}
                 onSubmit={(draft) => {
                   editSpaceFromDraft(space.id, draft);
@@ -85,7 +93,7 @@ function SpaceRow({
           <Button
             size="icon-sm"
             variant="ghost"
-            aria-label={`Move ${space.name} left`}
+            aria-label={gt("Move {name} left", { name: space.name })}
             disabled={index === 0}
             onClick={() => moveSpaceBy(space.id, -1)}
           >
@@ -94,7 +102,7 @@ function SpaceRow({
           <Button
             size="icon-sm"
             variant="ghost"
-            aria-label={`Move ${space.name} right`}
+            aria-label={gt("Move {name} right", { name: space.name })}
             disabled={index === count - 1}
             onClick={() => moveSpaceBy(space.id, 1)}
           >
@@ -103,7 +111,7 @@ function SpaceRow({
           <Button
             size="icon-sm"
             variant="ghost-destructive"
-            aria-label={`Delete ${space.name}`}
+            aria-label={gt("Delete {name}", { name: space.name })}
             onClick={() => void confirmAndDeleteSpace(space.id)}
           >
             <Trash2Icon />
@@ -115,6 +123,9 @@ function SpaceRow({
 }
 
 function ShortcutRow({ command }: { command: SpaceShortcutCommand }) {
+  const gt = useGT();
+  const m = useMessages();
+  const label = spaceShortcutLabel(command, m);
   const overrides = useSpaceShortcutStore((store) => store.overrides);
   const setShortcut = useSpaceShortcutStore((store) => store.setShortcut);
   const value = effectiveSpaceShortcut(overrides, command);
@@ -128,16 +139,16 @@ function ShortcutRow({ command }: { command: SpaceShortcutCommand }) {
   };
   return (
     <SettingsRow
-      title={spaceShortcutLabel(command)}
-      description={formatSpaceShortcut(value) ?? "Not bound"}
+      title={label}
+      description={formatSpaceShortcut(value) ?? gt("Not bound")}
       control={
         <div className="flex items-center gap-1">
           <Input
-            aria-label={`${spaceShortcutLabel(command)} shortcut`}
+            aria-label={gt("{label} shortcut", { label })}
             aria-invalid={!valid}
             className="w-44"
             value={text}
-            placeholder="e.g. mod+alt+arrowleft"
+            placeholder={gt("e.g. {shortcut}", { shortcut: "mod+alt+arrowleft" })}
             onChange={(event) => setDraft(event.target.value)}
             onBlur={commit}
             onKeyDown={(event) => {
@@ -147,7 +158,7 @@ function ShortcutRow({ command }: { command: SpaceShortcutCommand }) {
           />
           {command in overrides ? (
             <Button size="xs" variant="ghost" onClick={() => setShortcut(command, undefined)}>
-              Reset
+              <T>Reset</T>
             </Button>
           ) : null}
         </div>
@@ -157,6 +168,7 @@ function ShortcutRow({ command }: { command: SpaceShortcutCommand }) {
 }
 
 export function SpacesSettingsPanel({ editSpaceId }: { editSpaceId?: string | undefined }) {
+  const gt = useGT();
   const navigate = useNavigate();
   const spaces = useSpacesStore((store) => store.state.spaces);
   const view = useSpacesStore((store) => store.view);
@@ -174,16 +186,16 @@ export function SpacesSettingsPanel({ editSpaceId }: { editSpaceId?: string | un
   return (
     <SettingsPageContainer>
       <SettingsSection
-        title="Spaces"
+        title={gt("Spaces")}
         headerAction={
           <Popover open={creating} onOpenChange={setCreating}>
             <PopoverTrigger render={<Button size="xs" variant="outline" />}>
               <PlusIcon />
-              New space
+              <T>New space</T>
             </PopoverTrigger>
             <PopoverPopup align="end">
               <SpaceEditorForm
-                submitLabel="Create space"
+                submitLabel={gt("Create space")}
                 onCancel={() => setCreating(false)}
                 onSubmit={(draft) => {
                   createSpaceFromDraft(draft);
@@ -195,7 +207,10 @@ export function SpacesSettingsPanel({ editSpaceId }: { editSpaceId?: string | un
         }
       >
         {spaces.length === 0 ? (
-          <SettingsRow title="No spaces" description="Every project is in Unassigned." />
+          <SettingsRow
+            title={gt("No spaces")}
+            description={gt("Every project is in Unassigned.")}
+          />
         ) : (
           spaces.map((space, index) => (
             <SpaceRow
@@ -210,9 +225,9 @@ export function SpacesSettingsPanel({ editSpaceId }: { editSpaceId?: string | un
         )}
       </SettingsSection>
 
-      <SettingsSection title="Projects">
+      <SettingsSection title={gt("Projects")}>
         {groups.length === 0 ? (
-          <SettingsRow title="No projects" />
+          <SettingsRow title={gt("No projects")} />
         ) : (
           groups.map((group) => {
             const spaceId = view?.groupSpaceByKey.get(group.projectKey) ?? UNASSIGNED_SPACE_ID;
@@ -226,16 +241,22 @@ export function SpacesSettingsPanel({ editSpaceId }: { editSpaceId?: string | un
                     <span className="truncate">{group.displayName}</span>
                     {conflicts.has(group.projectKey) ? (
                       <Badge size="sm" variant="warning">
-                        Mixed spaces
+                        <T>Mixed spaces</T>
                       </Badge>
                     ) : null}
                   </span>
                 }
                 description={
                   conflicts.has(group.projectKey)
-                    ? `Its copies were in different spaces before they were grouped; it shows in ${space.name}, where it was used most recently. Pick a space to move every copy.`
+                    ? gt(
+                        "Its copies were in different spaces before they were grouped; it shows in {space}, where it was used most recently. Pick a space to move every copy.",
+                        { space: space.name },
+                      )
                     : group.groupedProjectCount > 1
-                      ? `${group.groupedProjectCount} copies move together.`
+                      ? gt(
+                          "{count, plural, one {{count} copy moves together.} other {{count} copies move together.}}",
+                          { count: group.groupedProjectCount },
+                        )
                       : undefined
                 }
                 control={
@@ -249,7 +270,7 @@ export function SpacesSettingsPanel({ editSpaceId }: { editSpaceId?: string | un
                     <SelectTrigger
                       size="sm"
                       className="w-40"
-                      aria-label={`Space for ${group.displayName}`}
+                      aria-label={gt("Space for {name}", { name: group.displayName })}
                     >
                       <SelectValue>
                         <span className="flex items-center gap-1.5">
@@ -276,7 +297,7 @@ export function SpacesSettingsPanel({ editSpaceId }: { editSpaceId?: string | un
         )}
       </SettingsSection>
 
-      <SettingsSection title="Shortcuts">
+      <SettingsSection title={gt("Shortcuts")}>
         {SPACE_SHORTCUT_COMMANDS.map((command) => (
           <ShortcutRow key={command} command={command} />
         ))}

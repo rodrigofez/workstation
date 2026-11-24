@@ -1,4 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
+import { useGT } from "gt-react";
 import { PlusIcon } from "lucide-react";
 import { useState, type MouseEvent as ReactMouseEvent } from "react";
 
@@ -69,6 +70,7 @@ function SpaceButton({
 }
 
 export function SpaceSwitcher() {
+  const gt = useGT();
   const view = useSpacesStore((store) => store.view);
   const switchSpace = useSwitchSpace();
   const navigate = useNavigate();
@@ -85,10 +87,10 @@ export function SpaceSwitcher() {
     void readLocalApi()
       ?.contextMenu.show<SpaceMenuAction>(
         [
-          { id: "edit", label: "Edit…" },
-          { id: "move-left", label: "Move left", disabled: index <= 0 },
-          { id: "move-right", label: "Move right", disabled: index >= lastSpaceIndex },
-          { id: "delete", label: "Delete…", destructive: true, separatorBefore: true },
+          { id: "edit", label: gt("Edit…") },
+          { id: "move-left", label: gt("Move left"), disabled: index <= 0 },
+          { id: "move-right", label: gt("Move right"), disabled: index >= lastSpaceIndex },
+          { id: "delete", label: gt("Delete…"), destructive: true, separatorBefore: true },
         ],
         { x: event.clientX, y: event.clientY },
       )
@@ -108,7 +110,7 @@ export function SpaceSwitcher() {
   return (
     <div
       role="toolbar"
-      aria-label="Spaces"
+      aria-label={gt("Spaces")}
       className="flex shrink-0 items-center gap-0.5 overflow-x-auto px-2 pt-1 [scrollbar-width:none]"
     >
       <SpaceTint />
@@ -124,13 +126,13 @@ export function SpaceSwitcher() {
       ))}
       <Popover open={creating} onOpenChange={setCreating}>
         <PopoverTrigger
-          render={<Button size="icon-sm" variant="ghost-muted" aria-label="New space" />}
+          render={<Button size="icon-sm" variant="ghost-muted" aria-label={gt("New space")} />}
         >
           <PlusIcon />
         </PopoverTrigger>
         <PopoverPopup side="top" align="start">
           <SpaceEditorForm
-            submitLabel="Create space"
+            submitLabel={gt("Create space")}
             onCancel={() => setCreating(false)}
             onSubmit={(draft) => {
               setCreating(false);

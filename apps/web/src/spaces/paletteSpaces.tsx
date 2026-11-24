@@ -1,3 +1,4 @@
+import { useGT } from "gt-react";
 import { useEffect } from "react";
 import { create } from "zustand";
 
@@ -35,6 +36,7 @@ export function usePaletteScopedProjectGroups<
 }
 
 export function usePaletteSpacesToggle() {
+  const gt = useGT();
   const allSpaces = usePaletteAllSpacesStore((store) => store.allSpaces);
   const setAllSpaces = usePaletteAllSpacesStore((store) => store.setAllSpaces);
   const activeName = useSpacesStore(
@@ -51,7 +53,9 @@ export function usePaletteSpacesToggle() {
       onMouseDown={(event) => event.preventDefault()}
       onClick={() => setAllSpaces(!allSpaces)}
     >
-      {allSpaces ? "Searching all spaces" : `Searching ${activeName} · Search all spaces`}
+      {allSpaces
+        ? gt("Searching all spaces")
+        : gt("Searching {name} · Search all spaces", { name: activeName })}
     </CommandFooterAction>
   );
 }

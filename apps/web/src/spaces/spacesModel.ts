@@ -2,6 +2,8 @@
 // them. Membership is keyed by physical project (environment + normalized
 // workspace root) so grouping settings can change without losing it.
 
+import { msg } from "gt-react";
+
 export const UNASSIGNED_SPACE_ID = "unassigned";
 
 // A space's color is a hue (HSL degrees, which is what the hue slider speaks)
@@ -15,14 +17,14 @@ export interface SpaceColor {
 const DEFAULT_SPACE_TINT = 0.5;
 
 export const SPACE_HUE_PRESETS = [
-  { name: "blue", label: "Blue", hue: 217 },
-  { name: "violet", label: "Violet", hue: 258 },
-  { name: "pink", label: "Pink", hue: 330 },
-  { name: "red", label: "Red", hue: 0 },
-  { name: "orange", label: "Orange", hue: 25 },
-  { name: "amber", label: "Amber", hue: 40 },
-  { name: "green", label: "Green", hue: 142 },
-  { name: "teal", label: "Teal", hue: 173 },
+  { name: "blue", label: msg("Blue"), hue: 217 },
+  { name: "violet", label: msg("Violet"), hue: 258 },
+  { name: "pink", label: msg("Pink"), hue: 330 },
+  { name: "red", label: msg("Red"), hue: 0 },
+  { name: "orange", label: msg("Orange"), hue: 25 },
+  { name: "amber", label: msg("Amber"), hue: 40 },
+  { name: "green", label: msg("Green"), hue: 142 },
+  { name: "teal", label: msg("Teal"), hue: 173 },
 ] as const;
 
 export function presetSpaceColor(name: (typeof SPACE_HUE_PRESETS)[number]["name"]): SpaceColor {

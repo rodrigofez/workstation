@@ -4,8 +4,10 @@ import {
   parseKeybindingShortcut,
   type ShortcutEventLike,
 } from "@t3tools/shared/keybindings";
+import { msg } from "gt-react";
 import { create } from "zustand";
 
+import { m, type MessageResolver } from "../i18n/messages";
 import { formatShortcutLabel } from "../keybindings";
 import type { SpaceShortcut } from "./spacesModel";
 
@@ -32,10 +34,13 @@ function defaultSpaceShortcut(
   return isMacPlatform(platform) ? `ctrl+${command.slice("space.jump.".length)}` : null;
 }
 
-export function spaceShortcutLabel(command: SpaceShortcutCommand): string {
-  if (command === "space.previous") return "Previous space";
-  if (command === "space.next") return "Next space";
-  return `Go to space ${command.slice("space.jump.".length)}`;
+export function spaceShortcutLabel(
+  command: SpaceShortcutCommand,
+  resolve: MessageResolver = m,
+): string {
+  if (command === "space.previous") return resolve(msg("Previous space"));
+  if (command === "space.next") return resolve(msg("Next space"));
+  return resolve(msg("Go to space {index}"), { index: command.slice("space.jump.".length) });
 }
 
 export function spaceShortcutFromCommand(command: SpaceShortcutCommand): SpaceShortcut {

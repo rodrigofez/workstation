@@ -1,4 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
+import { T, useGT, Var } from "gt-react";
 import { ChevronDownIcon, CloudOffIcon, MessagesSquareIcon, PlusIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -30,13 +31,20 @@ function SpacePicker({
   subject: string;
   onPick: (spaceId: string) => void;
 }) {
+  const gt = useGT();
   if (spaces.length > INLINE_SPACE_PICKER_LIMIT) {
     return (
       <Menu>
         <MenuTrigger
-          render={<Button size="xs" variant="ghost-muted" aria-label={`Move ${subject} to…`} />}
+          render={
+            <Button
+              size="xs"
+              variant="ghost-muted"
+              aria-label={gt("Move {subject} to…", { subject })}
+            />
+          }
         >
-          Move
+          <T>Move</T>
           <ChevronDownIcon className="size-3 opacity-60" />
         </MenuTrigger>
         <MenuPopup align="end" side="bottom">
@@ -59,14 +67,18 @@ function SpacePicker({
               <Button
                 size="icon-xs"
                 variant="ghost-muted"
-                aria-label={`Move ${subject} to ${space.name}`}
+                aria-label={gt("Move {subject} to {space}", { subject, space: space.name })}
                 onClick={() => onPick(space.id)}
               />
             }
           >
             <SpaceIcon space={space} className="size-3.5 text-sm" />
           </TooltipTrigger>
-          <TooltipPopup side="top">Move to {space.name}</TooltipPopup>
+          <TooltipPopup side="top">
+            <T>
+              Move to <Var>{space.name}</Var>
+            </T>
+          </TooltipPopup>
         </Tooltip>
       ))}
     </div>
@@ -84,6 +96,7 @@ function SorterRow({ icon, label, picker }: { icon: ReactNode; label: string; pi
 }
 
 function UnassignedSorter() {
+  const gt = useGT();
   const view = useSpacesStore((store) => store.view);
   const groups = useSidebarProjectGroups();
   if (view === null) return null;
@@ -93,21 +106,24 @@ function UnassignedSorter() {
   const scratchCount = view.unassignedScratchThreadKeys.length;
   const total = unassignedGroups.length + (scratchCount > 0 ? 1 : 0);
   if (total === 0) return null;
-  const scratchLabel = `${scratchCount} loose thread${scratchCount === 1 ? "" : "s"}`;
+  const scratchLabel = gt(
+    "{count, plural, one {{count} loose thread} other {{count} loose threads}}",
+    { count: scratchCount },
+  );
   return (
     <section
-      aria-label="Sort unassigned projects"
+      aria-label={gt("Sort unassigned projects")}
       className="mb-2 flex flex-col gap-0.5 rounded-lg bg-sidebar-row-hover/50 p-1"
     >
       <header className="flex flex-col gap-0.5 px-2.5 pt-1.5 pb-1">
         <span className="flex items-baseline gap-1.5 text-xs font-medium text-sidebar-foreground">
-          Unsorted
+          <T>Unsorted</T>
           <span className="text-sidebar-muted-foreground tabular-nums">{total}</span>
         </span>
         <span className="text-xs text-pretty text-sidebar-muted-foreground">
           {spaces.length === 0
-            ? "Create a space with + below to start sorting."
-            : "Give each one a space. Its threads move along."}
+            ? gt("Create a space with + below to start sorting.")
+            : gt("Give each one a space. Its threads move along.")}
         </span>
       </header>
       {unassignedGroups.map((group) => (
@@ -156,9 +172,13 @@ function EmptySpaceState({ space }: { space: SpaceSwitcherEntry }) {
       >
         <SpaceIcon space={space} className="size-6 text-2xl" />
       </span>
-      <span className="text-sm font-medium text-sidebar-foreground">{space.name} is empty</span>
+      <span className="text-sm font-medium text-sidebar-foreground">
+        <T>
+          <Var>{space.name}</Var> is empty
+        </T>
+      </span>
       <span className="mt-1 text-xs text-pretty text-sidebar-muted-foreground">
-        Add a project, or move one in from another space.
+        <T>Add a project, or move one in from another space.</T>
       </span>
       <div className="mt-4 flex flex-col items-stretch gap-1 self-stretch px-4">
         <Button
@@ -167,14 +187,14 @@ function EmptySpaceState({ space }: { space: SpaceSwitcherEntry }) {
           onClick={() => openCommandPalette({ open: "add-project" })}
         >
           <PlusIcon />
-          Add project
+          <T>Add project</T>
         </Button>
         <Button
           size="xs"
           variant="ghost-muted"
           onClick={() => void navigate({ to: "/settings/spaces" })}
         >
-          Move projects here
+          <T>Move projects here</T>
         </Button>
       </div>
     </section>
@@ -182,6 +202,7 @@ function EmptySpaceState({ space }: { space: SpaceSwitcherEntry }) {
 }
 
 function OfflineNotice({ spaceId }: { spaceId: string }) {
+  const gt = useGT();
   const unavailable = useUnavailableSpaceProjects(spaceId);
   if (unavailable.length === 0) return null;
   return (
@@ -194,8 +215,10 @@ function OfflineNotice({ spaceId }: { spaceId: string }) {
         >
           <CloudOffIcon aria-hidden className="size-3.5 shrink-0" />
           <span className="truncate">
-            {entry.label} is offline, {entry.count} project{entry.count === 1 ? "" : "s"}{" "}
-            unavailable
+            {gt(
+              "{count, plural, one {{label} is offline, {count} project unavailable} other {{label} is offline, {count} projects unavailable}}",
+              { label: entry.label, count: entry.count },
+            )}
           </span>
         </p>
       ))}

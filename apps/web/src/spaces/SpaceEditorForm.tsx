@@ -1,3 +1,4 @@
+import { T, useGT, useMessages } from "gt-react";
 import { useState, type CSSProperties, type FormEvent } from "react";
 
 import { cn } from "~/lib/utils";
@@ -34,6 +35,8 @@ export function SpaceEditorForm({
   onSubmit: (draft: SpaceDraft) => void;
   onCancel?: () => void;
 }) {
+  const gt = useGT();
+  const m = useMessages();
   const [name, setName] = useState(initial?.name ?? "");
   const [emojiText, setEmojiText] = useState(initial?.emoji ?? "");
   const [color, setColor] = useState<SpaceColor>(initial?.color ?? presetSpaceColor("blue"));
@@ -55,24 +58,26 @@ export function SpaceEditorForm({
       >
         <SpaceIcon space={{ name: name || "Space", emoji, color }} />
         <span className="truncate text-sm font-medium text-sidebar-foreground">
-          {name.trim() || "New space"}
+          {name.trim() || gt("New space")}
         </span>
       </div>
       <label className="flex flex-col gap-1.5 text-xs font-medium text-muted-foreground">
-        Name
+        <T>Name</T>
         <Input
           autoFocus
           value={name}
           maxLength={40}
-          placeholder="Side projects"
+          placeholder={gt("Side projects")}
           onChange={(event) => setName(event.target.value)}
         />
       </label>
       <div className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-muted-foreground">Emoji</span>
+        <span className="text-xs font-medium text-muted-foreground">
+          <T>Emoji</T>
+        </span>
         <div className="flex items-center gap-1">
           <Input
-            aria-label="Emoji"
+            aria-label={gt("Emoji")}
             className="w-14"
             value={emojiText}
             placeholder="-"
@@ -84,7 +89,7 @@ export function SpaceEditorForm({
               type="button"
               size="icon-xs"
               variant={emoji === candidate ? "secondary" : "ghost"}
-              aria-label={`Use ${candidate}`}
+              aria-label={gt("Use {emoji}", { emoji: candidate })}
               onClick={() => setEmojiText(candidate)}
             >
               {candidate}
@@ -93,15 +98,17 @@ export function SpaceEditorForm({
         </div>
       </div>
       <div className="flex flex-col gap-2">
-        <span className="text-xs font-medium text-muted-foreground">Color</span>
-        <div role="radiogroup" aria-label="Color presets" className="flex justify-between">
+        <span className="text-xs font-medium text-muted-foreground">
+          <T>Color</T>
+        </span>
+        <div role="radiogroup" aria-label={gt("Color presets")} className="flex justify-between">
           {SPACE_HUE_PRESETS.map((preset) => (
             <button
               key={preset.name}
               type="button"
               role="radio"
               aria-checked={color.hue === preset.hue}
-              aria-label={preset.label}
+              aria-label={m(preset.label)}
               onClick={() => setColor({ ...color, hue: preset.hue })}
               style={{ backgroundColor: spaceColorCss({ hue: preset.hue, tint: color.tint }) }}
               className={cn(
@@ -112,18 +119,22 @@ export function SpaceEditorForm({
           ))}
         </div>
         <ColorHueSlider
-          label="Hue"
+          label={gt("Hue")}
           value={color.hue}
           onChange={(hue) => setColor({ ...color, hue: Math.round(hue) % 360 })}
         />
       </div>
       <div className="flex flex-col gap-1.5">
         <span className="flex items-baseline justify-between text-xs font-medium text-muted-foreground">
-          Sidebar tint
-          <span className="tabular-nums">{tintPercent === 0 ? "Off" : `${tintPercent}%`}</span>
+          <T>Sidebar tint</T>
+          <span className="tabular-nums">
+            {tintPercent === 0
+              ? gt("Off", { $context: "sidebar tint disabled" })
+              : `${tintPercent}%`}
+          </span>
         </span>
         <input
-          aria-label="Sidebar tint"
+          aria-label={gt("Sidebar tint")}
           className="settings-slider w-full"
           type="range"
           min={0}
@@ -139,7 +150,7 @@ export function SpaceEditorForm({
       <div className="flex justify-end gap-2">
         {onCancel ? (
           <Button type="button" size="sm" variant="ghost" onClick={onCancel}>
-            Cancel
+            <T>Cancel</T>
           </Button>
         ) : null}
         <Button type="submit" size="sm" disabled={!canSubmit}>

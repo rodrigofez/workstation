@@ -1,3 +1,6 @@
+import { msg } from "gt-react";
+
+import { m } from "../i18n/messages";
 import { readLocalApi } from "../localApi";
 import {
   assignGroupToSpace,
@@ -60,11 +63,19 @@ export async function confirmAndDeleteSpace(spaceId: string): Promise<boolean> {
   const count = projectCountInSpace(view, spaceId);
   const confirmed =
     (await readLocalApi()?.dialogs.confirm(
-      `Delete the space “${space.name}”? ${
-        count === 0
-          ? "It has no projects."
-          : `Its ${count} project${count === 1 ? "" : "s"} will move to Unassigned.`
-      } No projects, threads or worktrees are deleted.`,
+      count === 0
+        ? m(
+            msg(
+              "Delete the space “{name}”? It has no projects. No projects, threads or worktrees are deleted.",
+            ),
+            { name: space.name },
+          )
+        : m(
+            msg(
+              "{count, plural, one {Delete the space “{name}”? Its {count} project will move to Unassigned. No projects, threads or worktrees are deleted.} other {Delete the space “{name}”? Its {count} projects will move to Unassigned. No projects, threads or worktrees are deleted.}}",
+            ),
+            { name: space.name, count },
+          ),
       { variant: "destructive" },
     )) ?? false;
   if (confirmed) useSpacesStore.getState().update((current) => deleteSpace(current, spaceId));

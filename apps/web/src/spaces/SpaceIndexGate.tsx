@@ -1,4 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
+import { T, useGT } from "gt-react";
 import { MessageSquareDashedIcon, PlusIcon } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
 
@@ -16,6 +17,7 @@ import { useSpacesStore } from "./spacesStore";
 import { spaceTargetLookup, useNavigateToSpaceTarget } from "./useSwitchSpace";
 
 function EmptySpaceHero() {
+  const gt = useGT();
   const navigate = useNavigate();
   const primaryEnvironmentId = usePrimaryEnvironmentId();
   const { scratchEnvironmentId, startScratchThread } = useScratchProject();
@@ -31,21 +33,26 @@ function EmptySpaceHero() {
           <div className="w-full max-w-lg px-8 py-12">
             <EmptyHeader className="max-w-none">
               {entry ? <SpaceIcon space={entry} className="mb-2 size-8 text-3xl" /> : null}
-              <EmptyTitle>{entry ? `${entry.name} is empty` : "This space is empty"}</EmptyTitle>
+              <EmptyTitle>
+                {entry ? gt("{name} is empty", { name: entry.name }) : gt("This space is empty")}
+              </EmptyTitle>
               <EmptyDescription>
-                Add a project here, move existing projects in, or start a thread without a project.
+                <T>
+                  Add a project here, move existing projects in, or start a thread without a
+                  project.
+                </T>
               </EmptyDescription>
               <div className="mt-6 flex flex-wrap justify-center gap-2">
                 <Button size="sm" onClick={() => openCommandPalette({ open: "add-project" })}>
                   <PlusIcon className="size-4" />
-                  Add project
+                  <T>Add project</T>
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => void navigate({ to: "/settings/spaces" })}
                 >
-                  Move projects here
+                  <T>Move projects here</T>
                 </Button>
                 {scratchTargetEnvironmentId === null ? null : (
                   <Button
@@ -54,7 +61,7 @@ function EmptySpaceHero() {
                     onClick={() => void startScratchThread(scratchTargetEnvironmentId)}
                   >
                     <MessageSquareDashedIcon className="size-4" />
-                    Start without a project
+                    <T>Start without a project</T>
                   </Button>
                 )}
               </div>
