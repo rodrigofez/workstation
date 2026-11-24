@@ -5,6 +5,7 @@ import {
   deriveSpacesView,
   initialSpacesState,
   parseSpacesState,
+  sameSpacesCatalog,
   serializeSpacesState,
   type SpacesCatalog,
   type SpacesState,
@@ -57,7 +58,8 @@ export const useSpacesStore = create<SpacesStore>((set) => ({
     }),
   setCatalog: (catalog) =>
     set((store) =>
-      catalog === store.catalog
+      catalog === store.catalog ||
+      (catalog !== null && store.catalog !== null && sameSpacesCatalog(catalog, store.catalog))
         ? store
         : { catalog, view: catalog === null ? null : deriveSpacesView(store.state, catalog) },
     ),

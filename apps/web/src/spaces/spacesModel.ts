@@ -114,6 +114,43 @@ export interface SpacesCatalog {
   readonly scratchThreadKeys: readonly string[];
 }
 
+function sameArray<T>(
+  left: readonly T[],
+  right: readonly T[],
+  same: (a: T, b: T) => boolean,
+): boolean {
+  return left.length === right.length && left.every((item, index) => same(item, right[index]!));
+}
+
+// The catalog is rebuilt on every coordinator render; storing an equal copy
+// would re-render every subscriber and, from the coordinator's effect, loop.
+export function sameSpacesCatalog(left: SpacesCatalog, right: SpacesCatalog): boolean {
+  return (
+    left.ready === right.ready &&
+    sameArray(left.scratchThreadKeys, right.scratchThreadKeys, Object.is) &&
+    sameArray(
+      left.groups,
+      right.groups,
+      (a, b) =>
+        a.key === b.key &&
+        a.isScratch === b.isScratch &&
+        sameArray(
+          a.members,
+          b.members,
+          (x, y) =>
+            x.physicalKey === y.physicalKey &&
+            x.environmentId === y.environmentId &&
+            x.lastUsedAt === y.lastUsedAt,
+        ) &&
+        sameArray(
+          a.projectRefs,
+          b.projectRefs,
+          (x, y) => x.environmentId === y.environmentId && x.projectId === y.projectId,
+        ),
+    )
+  );
+}
+
 export interface SpaceSwitcherEntry {
   readonly id: string;
   readonly name: string;

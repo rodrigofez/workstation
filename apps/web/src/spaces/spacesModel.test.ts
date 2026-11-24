@@ -22,6 +22,7 @@ import {
   rememberSpacePicker,
   resolveSpaceShortcut,
   resolveSwitchTarget,
+  sameSpacesCatalog,
   spaceOfThread,
   spacePicker,
   switchSpace,
@@ -75,6 +76,22 @@ describe("first launch", () => {
     expect(view.switcher.map((entry) => entry.name)).toEqual(["Work", "Personal", "Unassigned"]);
     expect(view.activeSpaceId).toBe(UNASSIGNED_SPACE_ID);
     expect(view.unassignedGroupKeys).toEqual(["repo:work", "repo:blog"]);
+  });
+});
+
+describe("catalog", () => {
+  it("treats a rebuilt catalog with the same content as unchanged", () => {
+    const rebuilt = catalog([group("repo:work", [{ env: "vps", path: "/srv/work" }]), blog]);
+    expect(sameSpacesCatalog(catalog([workRepo, blog]), rebuilt)).toBe(true);
+    expect(
+      sameSpacesCatalog(
+        catalog([workRepo, blog]),
+        catalog([group("repo:work", [{ env: "vps", path: "/srv/work", lastUsedAt: 1 }]), blog]),
+      ),
+    ).toBe(false);
+    expect(sameSpacesCatalog(catalog([workRepo]), catalog([workRepo], { ready: false }))).toBe(
+      false,
+    );
   });
 });
 

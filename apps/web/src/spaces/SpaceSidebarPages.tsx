@@ -146,7 +146,13 @@ export function SpaceSidebarPages({ sidebar }: { sidebar: ReactNode }) {
         className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden overscroll-x-contain [scrollbar-width:none]"
       >
         {spaceIds.map((spaceId, index) => (
-          <div key={spaceId} className="relative w-full shrink-0 snap-start snap-always">
+          <div
+            key={spaceId}
+            // Neighbours stay mounted to swipe in; only the active page is reachable.
+            inert={index !== activeIndex}
+            aria-hidden={index !== activeIndex}
+            className="relative w-full shrink-0 snap-start snap-always"
+          >
             <SpacePage spaceId={spaceId}>
               <Activity mode={isShown(index) ? "visible" : "hidden"}>
                 <div className="absolute inset-0 flex flex-col">{sidebar}</div>
