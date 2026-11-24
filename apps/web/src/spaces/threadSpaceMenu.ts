@@ -1,6 +1,13 @@
 import { scopedThreadKey, scopeThreadRef } from "@t3tools/client-runtime/environment";
-import type { ContextMenuItem, EnvironmentId, ThreadId } from "@t3tools/contracts";
+import type {
+  ContextMenuItem,
+  ContextMenuSource,
+  EnvironmentId,
+  ThreadId,
+} from "@t3tools/contracts";
+import { msg } from "gt-react";
 
+import { m } from "../i18n/messages";
 import { spacesProjectRefKey, UNASSIGNED_ENTRY } from "./spacesModel";
 import { useSpacesStore } from "./spacesStore";
 import { assignProjectGroupToSpace, moveScratchThreadsToSpace } from "./spaceActions";
@@ -36,7 +43,9 @@ function appendMoveToSpaceMenu<T extends string>(
     ...items,
     {
       id: `${MOVE_TO_SPACE_PREFIX}menu`,
-      label: isScratchThread(thread) ? "Move thread to space" : "Move project to space",
+      label: isScratchThread(thread)
+        ? m(msg("Move thread to space"))
+        : m(msg("Move project to space")),
       separatorBefore: true,
       children: [...scope.state.spaces, UNASSIGNED_ENTRY].map((space) => ({
         id: `${MOVE_TO_SPACE_PREFIX}${space.id}` as const,
@@ -51,6 +60,7 @@ interface ContextMenuApi {
   readonly show: <T extends string>(
     items: readonly ContextMenuItem<T>[],
     position?: { x: number; y: number },
+    source?: ContextMenuSource,
   ) => Promise<T | null>;
 }
 
@@ -59,7 +69,8 @@ export function withMoveToSpaceMenu(contextMenu: ContextMenuApi, thread: MenuThr
     show: <T extends string>(
       items: readonly ContextMenuItem<T>[],
       position?: { x: number; y: number },
-    ) => contextMenu.show(appendMoveToSpaceMenu(items, thread), position),
+      source?: ContextMenuSource,
+    ) => contextMenu.show(appendMoveToSpaceMenu(items, thread), position, source),
   };
 }
 
